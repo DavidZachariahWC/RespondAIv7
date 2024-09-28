@@ -1,59 +1,51 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import React, { useEffect, useCallback } from 'react';
+import { View, StatusBar } from 'react-native';
+import { Stack } from "expo-router";
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+//import { AuthProvider } from './AuthContext';
+import { UploadProvider } from './ManageUploadContext';
 
-import { useColorScheme } from '@/components/useColorScheme';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
+export default function Layout() {
+  const [fontsLoaded, fontError] = useFonts({
+    'CustomFont-Regular': require('../assets/fonts/Metropolis-Regular.otf'),
+    'CustomFont-Bold': require('../assets/fonts/Metropolis-Bold.otf'),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!loaded) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    //<AuthProvider>
+      <UploadProvider>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <StatusBar translucent backgroundColor="transparent" />
+        <Stack screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: 'transparent' },
+        }}>
+          <Stack.Screen name="index" options={{ animation: 'none' }} />
+          <Stack.Screen name="Intro" options={{ animation: 'none' }} />
+          <Stack.Screen name="Home" options={{ animation: 'none' }} />
+          <Stack.Screen name="SignIn" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="Respond" options={{ animation: 'none' }} />
+          <Stack.Screen name="CasualChat" options={{ animation: 'none' }} />
+          <Stack.Screen name="Settings" options={{ animation: 'none' }} />
+          <Stack.Screen name="Context" options={{ animation: 'none' }} />
+          <Stack.Screen name="SignUp" options={{ animation: 'none', headerShown: false }} />
+        </Stack>
+      </View>
+      </UploadProvider>
+    //</AuthProvider>
   );
 }
