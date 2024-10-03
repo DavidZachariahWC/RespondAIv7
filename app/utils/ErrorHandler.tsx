@@ -1,4 +1,4 @@
-//import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { AuthError } from 'firebase/auth';
 
 type ErrorType = 'auth' | 'network' | 'user-input' | 'unknown';
 
@@ -56,8 +56,7 @@ const errorMessages: { [key: string]: ErrorMessage } = {
   },
 };
 
-/*
-export const handleAuthError = (error: FirebaseAuthTypes.NativeFirebaseAuthError): ErrorMessage => {
+export const handleAuthError = (error: AuthError): ErrorMessage => {
   console.log('Firebase Auth Error:', error.code, error.message); // For debugging
 
   const knownError = errorMessages[error.code];
@@ -74,10 +73,8 @@ export const handleAuthError = (error: FirebaseAuthTypes.NativeFirebaseAuthError
   };
 };
 
-*/
-
 export const handleGoogleSignInError = (error: any): ErrorMessage => {
-  if (error.code === 'SIGN_IN_CANCELLED') {
+  if (error.code === 'auth/popup-closed-by-user') {
     return {
       title: 'Google Sign-In Cancelled',
       message: 'Google Sign-In was cancelled. Please try again if you want to sign in with Google.',

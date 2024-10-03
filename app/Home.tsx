@@ -6,11 +6,12 @@ import { colors, typography, spacing, globalStyles, gradientColors } from "../co
 import { Button } from '@rneui/themed';
 import { Stack } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
-import { AppRoutes } from '../types/routes';
-//import auth from '@react-native-firebase/auth';
+import { AppRoutes } from '../types/routes'; // REVIEW THIS 
+import { getAuth, signOut } from "firebase/auth";
 
 export default function Home() {
   const router = useRouter();
+  const auth = getAuth();
 
   // Use the AppRoutes type when navigating
   const handleNavigation = (route: AppRoutes) => {
@@ -24,10 +25,10 @@ export default function Home() {
     "Casual Catch-up - 3 days ago",
     "Project Proposal - 5 days ago",
   ];
-/*
+
   const handleSignOut = async () => {
     try {
-      await auth().signOut();
+      await signOut(auth);
       console.log('User signed out successfully');
       // Router will automatically redirect to SignIn page due to auth state change
     } catch (error) {
@@ -35,7 +36,7 @@ export default function Home() {
       Alert.alert('Sign Out Error', 'An error occurred while signing out. Please try again.');
     }
   };
-*/
+
   return (
     <>
       <View style={styles.container}>
@@ -89,7 +90,7 @@ export default function Home() {
               </View>
               <Button
                 title="Sign Out"
-                //onPress={handleSignOut}
+                onPress={handleSignOut}
                 buttonStyle={styles.signOutButton}
                 titleStyle={styles.signOutButtonTitle}
                 icon={<Ionicons name="log-out-outline" size={24} color={colors.white} style={styles.signOutButtonIcon} />}
