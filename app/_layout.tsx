@@ -3,7 +3,7 @@ import { View, StatusBar } from 'react-native';
 import { Stack } from "expo-router";
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-//import { AuthProvider } from './AuthContext';
+import { AuthProvider } from './AuthContext';
 import { UploadProvider } from './ManageUploadContext';
 
 
@@ -26,7 +26,7 @@ export default function Layout() {
   }
 
   return (
-    //<AuthProvider>
+    <AuthProvider>
       <UploadProvider>
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <StatusBar translucent backgroundColor="transparent" />
@@ -46,6 +46,6 @@ export default function Layout() {
         </Stack>
       </View>
       </UploadProvider>
-    //</AuthProvider>
+    </AuthProvider>
   );
 }
