@@ -7,7 +7,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, typography, spacing, gradientColors } from "../constants/styles";
 import { useAuth } from './AuthContext';
-import ContinueWithGoogleButton from '../components/ContinueWithGoogle';
 import AuthInput from '../components/AuthInput';
 import AlertComponent from '../components/AlertComponent';
 import LoadingIndicator from '../components/LoadingIndicator';

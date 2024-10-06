@@ -1,5 +1,6 @@
 import { TextStyle, ViewStyle } from "react-native";
 import { Colors, gradientColors } from "./Colors";
+import { StyleSheet } from 'react-native';
 
 const lightColors = Colors.light;
 
@@ -58,7 +59,7 @@ export const typography: Record<string, TextStyle> = {
   },
 };
 
-export const globalStyles: Record<string, ViewStyle> = {
+export const globalStyles = StyleSheet.create({
   gradientBackground: {
     flex: 1,
   },
@@ -75,6 +76,19 @@ export const globalStyles: Record<string, ViewStyle> = {
   buttonText: {
     ...typography.button,
   },
-};
+  emptyMessage: {
+    ...typography.body,
+    color: colors.white,
+    textAlign: 'center',
+    padding: spacing.m,
+    fontSize: 16,
+    fontStyle: 'italic',
+    opacity: 0.8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    marginHorizontal: spacing.m,
+    marginVertical: spacing.l,
+  },
+});
 
 export { gradientColors };
