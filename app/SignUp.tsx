@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
-
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import { colors, typography, spacing, gradientColors } from "../constants/styles";
 import { useAuth } from './AuthContext';
 import AuthInput from '../components/AuthInput';
 import AlertComponent from '../components/AlertComponent';
 import LoadingIndicator from '../components/LoadingIndicator';
-import { handleAuthError, handleGoogleSignInError } from './utils/ErrorHandler';
+import { handleAuthError } from './utils/ErrorHandler';
 import { validateEmail, validatePassword, validateName } from './utils/InputValidation';
 import { sendUserData } from './api/requests';
-import { getAuth, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -22,7 +20,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<null | { title: string; message: string }>(null);
   
-  const { user } = useAuth();
+  const { setUserObject } = useAuth();
   const router = useRouter();
   const auth = getAuth();
 
@@ -51,8 +49,25 @@ export default function SignUp() {
       await updateProfile(userCredential.user, { displayName: name });
       console.log('User account created & signed in!');
       
-      // Send user data to the server
-      await sendUserData(name, userCredential.user.uid);
+      // Set a basic user object immediately
+      setUserObject({
+        name: name,
+        personalities: {}
+      });
+
+      // Navigate to Home page
+      router.replace('/Home');
+
+      // Send user data to the server in the background
+      sendUserData(name, userCredential.user.uid)
+        .then(() => {
+          console.log('User data sent to server successfully');
+        })
+        .catch((error) => {
+          console.error('Error sending user data:', error);
+          // You might want to handle this error, perhaps by showing a non-blocking notification to the user
+        });
+
     } catch (error: any) {
       console.error('Sign Up Error:', error.code, error.message);
       const errorMessage = handleAuthError(error);

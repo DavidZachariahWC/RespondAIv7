@@ -34,3 +34,20 @@ export const updateUserName = async (userId: string, newName: string): Promise<a
         throw new Error('Failed to update user name. Please try again.');
     }
 };
+
+export const sendContextData = async (contextData: {
+  personality: string | null;
+  message: string;
+  responseInfo: string;
+  name: string;
+  userId: string;
+}): Promise<any> => {
+  try {
+    const response = await axios.post('http://localhost:3000/context', contextData);
+    console.log('Context data sent successfully');
+    return response.data;
+  } catch (error) {
+    console.error('Error sending context data:', error);
+    throw new Error('Failed to send context data. Please try again.');
+  }
+};

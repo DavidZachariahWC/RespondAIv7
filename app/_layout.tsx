@@ -6,7 +6,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './AuthContext';
 import { UploadProvider } from './ManageUploadContext';
 
-
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
@@ -43,6 +42,8 @@ export default function Layout() {
           <Stack.Screen name="Settings" options={{ animation: 'none' }} />
           <Stack.Screen name="Context" options={{ animation: 'none' }} />
           <Stack.Screen name="SignUp" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="generatingResponse" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="preview" options={{ animation: 'none', headerShown: false }} />
         </Stack>
       </View>
       </UploadProvider>

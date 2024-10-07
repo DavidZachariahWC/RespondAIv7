@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
@@ -7,12 +7,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUpload } from './ManageUploadContext';
 import { colors, typography, spacing, gradientColors } from '../constants/styles';
 import MainButtonsContainer from '../components/MainButtonsContainer';
+import { sendContextData } from './api/requests';
+import { useAuth } from './AuthContext';
 
 export default function Context() {
   const { personalityName: initialPersonalityName } = useLocalSearchParams();
   const [personalityName, setPersonalityName] = useState<string | null>(initialPersonalityName as string | null);
   const router = useRouter();
-  const { contextUploaded, infoUploaded, setContextUploaded, setInfoUploaded } = useUpload();
+  const { contextUploaded, infoUploaded, setContextUploaded, setInfoUploaded, contextMessage, responseInfo } = useUpload();
+  const { user, userObject } = useAuth();
 
   const handleContextPress = useCallback(() => {
     if (!contextUploaded) {
@@ -54,6 +57,32 @@ export default function Context() {
     return (personalityName ? 33.33 : 0) + (contextUploaded ? 33.33 : 0) + (infoUploaded ? 33.33 : 0);
   }, [personalityName, contextUploaded, infoUploaded]);
 
+  const handleGenerate = useCallback(async () => {
+    if (progress > 99) {
+      if (!user || !userObject) {
+        console.error('User not authenticated or user object not available');
+        return;
+      }
+
+      const contextData = {
+        personality: personalityName,
+        message: contextMessage,
+        responseInfo: responseInfo,
+        name: userObject.name,
+        userId: user.uid
+      };
+
+      try {
+        await sendContextData(contextData);
+        console.log('Context data sent successfully');
+        router.push('/generatingResponse');
+      } catch (error) {
+        console.error('Failed to send context data:', error);
+        // You might want to show an error message to the user here
+      }
+    }
+  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router]);
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={styles.gradient}>
@@ -85,12 +114,12 @@ export default function Context() {
 
           <View style={styles.bottomContainer}>
             <TouchableOpacity 
-              style={[styles.doneButton, progress === 100 && styles.doneButtonActive]} 
-              onPress={() => console.log('Done')}
-              disabled={progress !== 100}
+              style={[styles.doneButton, progress > 99 && styles.doneButtonActive]} 
+              onPress={handleGenerate}
+              disabled={progress < 99}
             >
-              <Text style={[styles.doneButtonText, progress === 100 && styles.doneButtonTextActive]}>
-                {progress === 100 ? 'Finish' : 'Generate'}
+              <Text style={[styles.doneButtonText, progress > 99 && styles.doneButtonTextActive]}>
+                {progress > 99 ? 'Generate' : 'Incomplete'}
               </Text>
             </TouchableOpacity>
             <View style={styles.progressBarContainer}>

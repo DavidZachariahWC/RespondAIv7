@@ -23,9 +23,11 @@ export const colors = {
   warning: "#FFA500",
   info: "#0000FF",
   lightGrey: "#F5F5F5",
+  shadow: "rgba(0, 0, 0, 0.1)", // Added shadow color
 };
 
 export const spacing = {
+  xs: 4, // Added XS spacing
   s: 8,
   m: 16,
   l: 24,
@@ -55,6 +57,12 @@ export const typography: Record<string, TextStyle> = {
     fontSize: 18,
     fontWeight: "600",
     fontFamily: 'CustomFont-Bold',
+    color: colors.textSecondary,
+  },
+  caption: { // Added caption style
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'CustomFont-Regular',
     color: colors.textSecondary,
   },
 };
@@ -88,6 +96,13 @@ export const globalStyles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: spacing.m,
     marginVertical: spacing.l,
+  },
+  shadow: { // Added shadow style
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
 
