@@ -9,6 +9,7 @@ import { colors, typography, spacing, gradientColors } from '../constants/styles
 import MainButtonsContainer from '../components/MainButtonsContainer';
 import { sendMessage, createAndLogResponseObject } from './api/requests';
 import { useAuth } from './AuthContext';
+import { useConversations } from './useConversations';
 
 export default function Context() {
   const { personalityName: initialPersonalityName } = useLocalSearchParams();
@@ -25,6 +26,7 @@ export default function Context() {
     clearResponseInfo 
   } = useUpload();
   const { user, userObject } = useAuth();
+  const { addConversation } = useConversations();
 
   const handleContextPress = useCallback(() => {
     if (!contextUploaded) {
@@ -88,14 +90,23 @@ export default function Context() {
         console.log('Assistant Message:', response.assistantResponse);
         
         // Create and log the local response object
-        const localResponseObject = createAndLogResponseObject(
+        const localResponseObject = await createAndLogResponseObject(
           response.threadId,
           response.assistantResponse,
           user.uid,
           responseInfo,
-          contextMessage
+          contextMessage,
+          personalityName as string
         );
         
+        // Add the new conversation
+        await addConversation({
+          threadId: response.threadId,
+          lastMessage: response.assistantResponse.substring(0, 50) + '...',
+          timestamp: Date.now(),
+          personalityName: personalityName as string
+        });
+
         // Clear the context and response info after creating the local object
         clearContext();
         clearResponseInfo();
@@ -111,7 +122,7 @@ export default function Context() {
         router.back();
       }
     }
-  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router, clearContext, clearResponseInfo]);
+  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router, clearContext, clearResponseInfo, addConversation]);
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from '@rneui/themed';
@@ -6,17 +6,25 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, gradientColors, spacing, globalStyles } from '../constants/styles';
 import * as Clipboard from 'expo-clipboard';
+import { useConversations, Conversation } from './useConversations';
 
 export default function Preview() {
   const router = useRouter();
-  const { response, threadId } = useLocalSearchParams();
+  const { threadId } = useLocalSearchParams();
+  const { getConversationByThreadId } = useConversations();
+  const [conversation, setConversation] = useState<Conversation | null>(null);
 
-  console.log('Thread ID in preview:', threadId);
+  useEffect(() => {
+    if (threadId) {
+      const fetchedConversation = getConversationByThreadId(threadId as string);
+      setConversation(fetchedConversation);
+    }
+  }, [threadId, getConversationByThreadId]);
 
   const handleCopyToClipboard = async () => {
-    if (response) {
+    if (conversation?.lastMessage) {
       try {
-        await Clipboard.setStringAsync(response as string);
+        await Clipboard.setStringAsync(conversation.lastMessage);
         console.log('Text copied to clipboard');
         // You might want to show a toast or some feedback here
       } catch (error) {
@@ -33,8 +41,8 @@ export default function Preview() {
             <Text style={styles.title}>Preview</Text>
             <View style={styles.contentContainer}>
               <View style={[styles.responseBox, globalStyles.shadow]}>
-                {response ? (
-                  <Text style={styles.responseText}>{response as string}</Text>
+                {conversation ? (
+                  <Text style={styles.responseText}>{conversation.lastMessage}</Text>
                 ) : (
                   <Text style={styles.placeholderText}>No response available</Text>
                 )}
@@ -44,7 +52,7 @@ export default function Preview() {
                 onPress={handleCopyToClipboard}
                 buttonStyle={[styles.button, globalStyles.shadow]}
                 titleStyle={styles.buttonText}
-                disabled={!response}
+                disabled={!conversation}
               />
               <Button
                 title="Regenerate"

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Conversation } from '../useConversations';
 
 export const sendUserData = async (name: string, userId: string): Promise<any> => {
     try {
@@ -74,12 +76,13 @@ export const sendMessage = async (
 };
 
 // New function to create and log the local object
-export const createAndLogResponseObject = (
+export const createAndLogResponseObject = async (
   threadId: string,
   assistantResponse: string,
   userId: string,
   responseInfo: string,
-  contextMessage: string
+  contextMessage: string,
+  personalityName: string
 ) => {
   const responseObject = {
     threadId,
@@ -89,5 +92,22 @@ export const createAndLogResponseObject = (
     message: contextMessage
   };
   console.log('Local response object:', responseObject);
+
+  // Save conversation to AsyncStorage
+  try {
+    const newConversation: Conversation = {
+      threadId,
+      lastMessage: assistantResponse.substring(0, 50) + '...', // Truncate for preview
+      timestamp: Date.now(),
+      personalityName
+    };
+    const storedConversations = await AsyncStorage.getItem('conversations');
+    let conversations: Conversation[] = storedConversations ? JSON.parse(storedConversations) : [];
+    conversations = [newConversation, ...conversations];
+    await AsyncStorage.setItem('conversations', JSON.stringify(conversations));
+  } catch (error) {
+    console.error('Error saving conversation:', error);
+  }
+
   return responseObject;
 };

@@ -4,27 +4,20 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, typography, spacing, globalStyles, gradientColors } from "../constants/styles";
 import { Button } from '@rneui/themed';
-import { Stack } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
-import { AppRoutes } from '../types/routes'; // REVIEW THIS 
+import { AppRoutes } from '../types/routes';
 import { getAuth, signOut } from "firebase/auth";
+import { useConversations } from './useConversations';
 
 export default function Home() {
   const router = useRouter();
   const auth = getAuth();
+  const { conversations } = useConversations();
 
   // Use the AppRoutes type when navigating
   const handleNavigation = (route: AppRoutes) => {
     router.push(route as any);
   };
-
-  const historyItems = [
-    "Chat with Boss - 2 days ago",
-    "Friend's Drama - Yesterday",
-    "Team Meeting Notes - 1 week ago",
-    "Casual Catch-up - 3 days ago",
-    "Project Proposal - 5 days ago",
-  ];
 
   const handleSignOut = async () => {
     try {
@@ -78,15 +71,20 @@ export default function Home() {
               </View>
               <View style={styles.historySection}>
                 <Text style={styles.historyTitle}>Recent Chats</Text>
-                {historyItems.map((item, index) => (
-                  <Button
-                    key={index}
-                    title={item}
-                    buttonStyle={styles.historyButton}
-                    titleStyle={styles.historyButtonTitle}
-                    icon={<Ionicons name="time-outline" size={24} color={colors.primary} style={styles.historyButtonIcon} />}
-                  />
-                ))}
+                {conversations.length > 0 ? (
+                  conversations.map((conversation, index) => (
+                    <Button
+                      key={conversation.threadId}
+                      title={`${conversation.personalityName} - ${conversation.lastMessage}`}
+                      buttonStyle={styles.historyButton}
+                      titleStyle={styles.historyButtonTitle}
+                      icon={<Ionicons name="time-outline" size={24} color={colors.primary} style={styles.historyButtonIcon} />}
+                      onPress={() => router.push({ pathname: '/preview', params: { threadId: conversation.threadId } })}
+                    />
+                  ))
+                ) : (
+                  <Text style={styles.noConversationsText}>No recent conversations</Text>
+                )}
               </View>
               <Button
                 title="Sign Out"
@@ -206,5 +204,11 @@ const styles = StyleSheet.create({
   },
   signOutButtonIcon: {
     marginRight: spacing.s,
+  },
+  noConversationsText: {
+    ...typography.body,
+    color: colors.white,
+    textAlign: 'center',
+    marginTop: spacing.m,
   },
 });
