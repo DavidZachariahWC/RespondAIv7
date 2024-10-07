@@ -12,6 +12,7 @@ import { handleAuthError } from './utils/ErrorHandler';
 import { validateEmail, validatePassword, validateName } from './utils/InputValidation';
 import { sendUserData } from './api/requests';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { fetchUserData } from './api/requests';
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -42,7 +43,7 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     if (!validateInputs()) return;
-  
+
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -55,18 +56,24 @@ export default function SignUp() {
         personalities: {}
       });
 
+      // Send user data to the server
+      await sendUserData(name, userCredential.user.uid);
+      console.log('User data sent to server successfully');
+
+      // Fetch the latest user data from the server
+      try {
+        const userData = await fetchUserData(userCredential.user.uid);
+        setUserObject({
+          name: userData.name,
+          personalities: userData.personalities
+        });
+        console.log('Latest user data fetched and set');
+      } catch (fetchError) {
+        console.error('Error fetching user data after sign up:', fetchError);
+      }
+
       // Navigate to Home page
       router.replace('/Home');
-
-      // Send user data to the server in the background
-      sendUserData(name, userCredential.user.uid)
-        .then(() => {
-          console.log('User data sent to server successfully');
-        })
-        .catch((error) => {
-          console.error('Error sending user data:', error);
-          // You might want to handle this error, perhaps by showing a non-blocking notification to the user
-        });
 
     } catch (error: any) {
       console.error('Sign Up Error:', error.code, error.message);

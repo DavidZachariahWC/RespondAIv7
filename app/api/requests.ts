@@ -51,3 +51,24 @@ export const sendContextData = async (contextData: {
     throw new Error('Failed to send context data. Please try again.');
   }
 };
+
+export const sendMessage = async (
+  userId: string,
+  userMessage: string,
+  context: string,
+  personalityKey: string
+): Promise<string> => {
+  try {
+    const response = await axios.post('http://localhost:3000/sendMessage', {
+      userId,
+      userMessage,
+      context,
+      personalityKey
+    });
+    console.log('Message sent successfully');
+    return response.data.assistantResponse;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    throw new Error('Failed to send message. Please try again.');
+  }
+};

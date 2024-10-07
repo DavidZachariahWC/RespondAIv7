@@ -1,0 +1,75 @@
+
+
+Dear Frontend Engineer,
+
+I hope this message finds you well. I'm writing to inform you about important updates to our messaging API, which now supports continued conversations using the OpenAI Assistants API. Here are the key changes:
+
+1. **Updated /sendMessage Endpoint**
+   - Now returns a `threadId` along with the `assistantResponse`.
+   - Use this `threadId` to continue the conversation on the same thread.
+
+2. **New /continueThread Endpoint**
+   - Use this to send follow-up messages on an existing thread.
+   - Requires the `threadId` from the previous message in the conversation.
+
+Here are the details for both endpoints:
+
+### /sendMessage Endpoint (Updated)
+
+- **URL:** `http://localhost:3000/sendMessage`
+- **Method:** POST
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "userMessage": "string",
+    "context": "string",
+    "personalityKey": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "assistantResponse": "string",
+    "threadId": "string"
+  }
+  ```
+
+### /continueThread Endpoint (New)
+
+- **URL:** `http://localhost:3000/continueThread`
+- **Method:** POST
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "userMessage": "string",
+    "context": "string",
+    "personalityKey": "string",
+    "threadId": "string"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "assistantResponse": "string",
+    "threadId": "string"
+  }
+  ```
+
+To implement continued conversations:
+
+1. Store the `threadId` received from the initial `/sendMessage` response.
+2. For follow-up messages, use the `/continueThread` endpoint and include the stored `threadId`.
+3. Continue using the same `threadId` for subsequent messages in the conversation.
+4. Start a new thread (use `/sendMessage`) when the user wants to begin a new conversation.
+
+Error handling remains the same for both endpoints. Please ensure proper validation and error handling on the frontend.
+
+If you have any questions or need clarification, please don't hesitate to reach out.
+
+Best regards,
+Backend Developer
+
+---
+

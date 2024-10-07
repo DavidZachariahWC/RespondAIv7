@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useCallback } from 'react';
 
 type UploadContextType = {
   contextUploaded: boolean;
@@ -9,6 +9,8 @@ type UploadContextType = {
   setInfoUploaded: (value: boolean) => void;
   setContextMessage: (value: string) => void;
   setResponseInfo: (value: string) => void;
+  clearContext: () => void;
+  clearResponseInfo: () => void;
 };
 
 const UploadContext = createContext<UploadContextType | undefined>(undefined);
@@ -19,19 +21,31 @@ export const UploadProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [contextMessage, setContextMessage] = useState('');
   const [responseInfo, setResponseInfo] = useState('');
 
+  const clearContext = useCallback(() => {
+    setContextUploaded(false);
+    setContextMessage('');
+  }, []);
+
+  const clearResponseInfo = useCallback(() => {
+    setInfoUploaded(false);
+    setResponseInfo('');
+  }, []);
+
+  const value = {
+    contextUploaded,
+    infoUploaded,
+    contextMessage,
+    responseInfo,
+    setContextUploaded,
+    setInfoUploaded,
+    setContextMessage,
+    setResponseInfo,
+    clearContext,
+    clearResponseInfo
+  };
+
   return (
-    <UploadContext.Provider 
-      value={{ 
-        contextUploaded, 
-        infoUploaded, 
-        contextMessage,
-        responseInfo,
-        setContextUploaded, 
-        setInfoUploaded,
-        setContextMessage,
-        setResponseInfo
-      }}
-    >
+    <UploadContext.Provider value={value}>
       {children}
     </UploadContext.Provider>
   );

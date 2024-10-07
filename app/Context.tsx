@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
@@ -7,14 +7,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUpload } from './ManageUploadContext';
 import { colors, typography, spacing, gradientColors } from '../constants/styles';
 import MainButtonsContainer from '../components/MainButtonsContainer';
-import { sendContextData } from './api/requests';
+import { sendMessage } from './api/requests';
 import { useAuth } from './AuthContext';
 
 export default function Context() {
   const { personalityName: initialPersonalityName } = useLocalSearchParams();
   const [personalityName, setPersonalityName] = useState<string | null>(initialPersonalityName as string | null);
   const router = useRouter();
-  const { contextUploaded, infoUploaded, setContextUploaded, setInfoUploaded, contextMessage, responseInfo } = useUpload();
+  const { 
+    contextUploaded, 
+    infoUploaded, 
+    setContextUploaded, 
+    setInfoUploaded, 
+    contextMessage, 
+    responseInfo, 
+    clearContext, 
+    clearResponseInfo 
+  } = useUpload();
   const { user, userObject } = useAuth();
 
   const handleContextPress = useCallback(() => {
@@ -64,24 +73,34 @@ export default function Context() {
         return;
       }
 
-      const contextData = {
-        personality: personalityName,
-        message: contextMessage,
-        responseInfo: responseInfo,
-        name: userObject.name,
-        userId: user.uid
-      };
+      // Navigate to the generatingResponse page first
+      router.push('/generatingResponse');
 
       try {
-        await sendContextData(contextData);
-        console.log('Context data sent successfully');
-        router.push('/generatingResponse');
+        const response = await sendMessage(
+          user.uid,
+          contextMessage,
+          responseInfo,
+          personalityName as string
+        );
+        console.log('Response received:', response);
+        
+        // Clear the context and response info
+        clearContext();
+        clearResponseInfo();
+        
+        // Navigate to the preview page with the response
+        router.push({
+          pathname: '/preview',
+          params: { response: response }
+        });
       } catch (error) {
-        console.error('Failed to send context data:', error);
-        // You might want to show an error message to the user here
+        console.error('Failed to send message:', error);
+        // In case of error, navigate back to the Context page
+        router.back();
       }
     }
-  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router]);
+  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router, clearContext, clearResponseInfo]);
 
   return (
     <View style={styles.container}>
