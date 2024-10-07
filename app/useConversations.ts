@@ -6,6 +6,8 @@ export interface Conversation {
   lastMessage: string;
   timestamp: number;
   personalityName: string;
+  userId: string;
+  context: string;
 }
 
 export const useConversations = () => {
@@ -40,5 +42,27 @@ export const useConversations = () => {
     return conversations.find(conversation => conversation.threadId === threadId) || null;
   }, [conversations]);
 
-  return { conversations, addConversation, getConversationByThreadId };
+  const updateConversation = async (updatedConversation: Conversation) => {
+    try {
+      const updatedConversations = conversations.map(conv => 
+        conv.threadId === updatedConversation.threadId ? updatedConversation : conv
+      );
+      await AsyncStorage.setItem('conversations', JSON.stringify(updatedConversations));
+      setConversations(updatedConversations);
+    } catch (error) {
+      console.error('Error updating conversation:', error);
+    }
+  };
+
+  const deleteConversation = async (threadId: string) => {
+    try {
+      const updatedConversations = conversations.filter(conv => conv.threadId !== threadId);
+      await AsyncStorage.setItem('conversations', JSON.stringify(updatedConversations));
+      setConversations(updatedConversations);
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    }
+  };
+
+  return { conversations, addConversation, getConversationByThreadId, updateConversation, deleteConversation };
 };

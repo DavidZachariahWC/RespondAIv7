@@ -99,7 +99,9 @@ export const createAndLogResponseObject = async (
       threadId,
       lastMessage: assistantResponse.substring(0, 50) + '...', // Truncate for preview
       timestamp: Date.now(),
-      personalityName
+      personalityName,
+      userId,
+      context: contextMessage // Using contextMessage as the context
     };
     const storedConversations = await AsyncStorage.getItem('conversations');
     let conversations: Conversation[] = storedConversations ? JSON.parse(storedConversations) : [];
@@ -110,4 +112,27 @@ export const createAndLogResponseObject = async (
   }
 
   return responseObject;
+};
+
+export const continueThread = async (
+  userId: string,
+  userMessage: string,
+  context: string,
+  personalityKey: string,
+  threadId: string
+): Promise<{ assistantResponse: string; threadId: string }> => {
+  try {
+    const response = await axios.post('http://localhost:3000/continueThread', {
+      userId,
+      userMessage,
+      context,
+      personalityKey,
+      threadId
+    });
+    console.log('Thread continued successfully');
+    return response.data;
+  } catch (error) {
+    console.error('Error continuing thread:', error);
+    throw new Error('Failed to continue thread. Please try again.');
+  }
 };

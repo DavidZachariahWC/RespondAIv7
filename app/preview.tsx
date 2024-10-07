@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from '@rneui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,16 +7,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, gradientColors, spacing, globalStyles } from '../constants/styles';
 import * as Clipboard from 'expo-clipboard';
 import { useConversations, Conversation } from './useConversations';
+import { continueThread } from './api/requests';
+import { useAuth } from './AuthContext'; // Import useAuth hook
 
 export default function Preview() {
   const router = useRouter();
   const { threadId } = useLocalSearchParams();
-  const { getConversationByThreadId } = useConversations();
+  const { getConversationByThreadId, updateConversation } = useConversations();
   const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [customModifications, setCustomModifications] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const { user } = useAuth(); // Get the current user
 
   useEffect(() => {
     if (threadId) {
       const fetchedConversation = getConversationByThreadId(threadId as string);
+      console.log('Fetched conversation:', fetchedConversation); // Log the fetched conversation
       setConversation(fetchedConversation);
     }
   }, [threadId, getConversationByThreadId]);
@@ -33,20 +39,63 @@ export default function Preview() {
     }
   };
 
+  const handleRegenerate = async () => {
+    if (!conversation || !user) return;
+
+    console.log('Current conversation before regeneration:', conversation); // Log the current conversation
+
+    setIsRegenerating(true);
+    const additionalInfo = customModifications.trim();
+    const userMessage = `The user wants the response rewritten and has${additionalInfo ? '' : ' not'} provided the following additional information: ${additionalInfo}`;
+
+    console.log('User message for regeneration:', userMessage); // Log the user message
+    console.log('Context for regeneration:', conversation.context); // Log the context
+
+    try {
+      const response = await continueThread(
+        user.uid,
+        userMessage,
+        conversation.context,
+        conversation.personalityName,
+        conversation.threadId
+      );
+      
+      console.log('Response from continueThread:', response); // Log the response
+
+      // Update the conversation with the new response
+      const updatedConversation: Conversation = {
+        ...conversation,
+        lastMessage: response.assistantResponse,
+        threadId: response.threadId, // Update the threadId in case it changed
+      };
+      
+      console.log('Updated conversation:', updatedConversation); // Log the updated conversation
+
+      await updateConversation(updatedConversation);
+      setConversation(updatedConversation);
+      setCustomModifications('');
+    } catch (error) {
+      console.error('Failed to regenerate response:', error);
+      Alert.alert('Error', 'Failed to regenerate response. Please try again.');
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            <Text style={styles.title}>Preview</Text>
+            <Text style={styles.title}>Response</Text>
             <View style={styles.contentContainer}>
-              <View style={[styles.responseBox, globalStyles.shadow]}>
+              <ScrollView style={[styles.responseBox, globalStyles.shadow]}>
                 {conversation ? (
                   <Text style={styles.responseText}>{conversation.lastMessage}</Text>
                 ) : (
                   <Text style={styles.placeholderText}>No response available</Text>
                 )}
-              </View>
+              </ScrollView>
               <Button
                 title="Copy to Clipboard"
                 onPress={handleCopyToClipboard}
@@ -54,16 +103,20 @@ export default function Preview() {
                 titleStyle={styles.buttonText}
                 disabled={!conversation}
               />
-              <Button
-                title="Regenerate"
-                onPress={() => {/* Implement regenerate functionality */}}
-                buttonStyle={[styles.button, globalStyles.shadow, styles.regenerateButton]}
-                titleStyle={styles.buttonText}
-              />
               <TextInput
                 style={[styles.input, globalStyles.shadow]}
                 placeholder="Custom modifications here"
                 placeholderTextColor={colors.textSecondary}
+                value={customModifications}
+                onChangeText={setCustomModifications}
+                multiline
+              />
+              <Button
+                title={isRegenerating ? "Regenerating..." : "Regenerate"}
+                onPress={handleRegenerate}
+                buttonStyle={[styles.button, globalStyles.shadow, styles.regenerateButton]}
+                titleStyle={styles.buttonText}
+                disabled={isRegenerating || !conversation}
               />
             </View>
           </ScrollView>
@@ -116,7 +169,7 @@ const styles = StyleSheet.create({
     padding: spacing.m,
     marginBottom: spacing.l,
     width: '100%',
-    minHeight: 150, // Ensure the box has a minimum height
+    maxHeight: 300, // Set a max height and allow scrolling
     borderWidth: 5, // Add a subtle border
     borderColor: 'rgba(0, 0, 0, 1)', // Very light black for the border
     // More pronounced shadow
@@ -163,6 +216,8 @@ const styles = StyleSheet.create({
   },
   regenerateButton: {
     backgroundColor: colors.accent,
+    height: 60, // Increased height for the regenerate button
+    justifyContent: 'center', // Center the text vertically
   },
   input: {
     backgroundColor: colors.white,
@@ -171,7 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.m,
     width: '100%', // Make input full width
     ...typography.body,
-    color: colors.text,
+    color: colors.black, // Changed to black
   },
   bottomContainer: {
     width: '100%',

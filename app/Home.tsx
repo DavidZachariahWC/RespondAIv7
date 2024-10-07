@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,11 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AppRoutes } from '../types/routes';
 import { getAuth, signOut } from "firebase/auth";
 import { useConversations } from './useConversations';
+import ConversationCard from '../components/conversationCard';
 
 export default function Home() {
   const router = useRouter();
   const auth = getAuth();
-  const { conversations } = useConversations();
+  const { conversations, deleteConversation } = useConversations();
 
   // Use the AppRoutes type when navigating
   const handleNavigation = (route: AppRoutes) => {
@@ -28,6 +29,27 @@ export default function Home() {
       console.error('Sign out error', error);
       Alert.alert('Sign Out Error', 'An error occurred while signing out. Please try again.');
     }
+  };
+
+  const handleDeleteConversation = (threadId: string) => {
+    Alert.alert(
+      "Delete Conversation",
+      "Are you sure you want to delete this conversation?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          onPress: () => {
+            deleteConversation(threadId);
+            // The list will automatically update due to state change in useConversations
+          },
+          style: "destructive"
+        }
+      ]
+    );
   };
 
   return (
@@ -72,14 +94,12 @@ export default function Home() {
               <View style={styles.historySection}>
                 <Text style={styles.historyTitle}>Recent Chats</Text>
                 {conversations.length > 0 ? (
-                  conversations.map((conversation, index) => (
-                    <Button
+                  conversations.map((conversation) => (
+                    <ConversationCard
                       key={conversation.threadId}
-                      title={`${conversation.personalityName} - ${conversation.lastMessage}`}
-                      buttonStyle={styles.historyButton}
-                      titleStyle={styles.historyButtonTitle}
-                      icon={<Ionicons name="time-outline" size={24} color={colors.primary} style={styles.historyButtonIcon} />}
-                      onPress={() => router.push({ pathname: '/preview', params: { threadId: conversation.threadId } })}
+                      threadId={conversation.threadId}
+                      lastMessage={conversation.lastMessage}
+                      onDelete={handleDeleteConversation}
                     />
                   ))
                 ) : (
@@ -174,24 +194,44 @@ const styles = StyleSheet.create({
     color: colors.white,
     marginBottom: spacing.m,
   },
-  historyButton: {
+  historyButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.m,
     backgroundColor: colors.white,
     borderRadius: 15,
-    marginBottom: spacing.m,
+  },
+  historyButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 15,
     height: 70,
     justifyContent: 'flex-start',
     paddingHorizontal: spacing.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  deleteButton: {
+    padding: spacing.s,
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    right: 0,
+    height: '100%',
+    justifyContent: 'center',
   },
   historyButtonTitle: {
     ...typography.body,
     color: colors.primary,
     textAlign: 'left',
+    flex: 1,
+    marginLeft: spacing.m,
+    fontSize: 14,
+    paddingRight: 40, // Add right padding to prevent text from being covered by delete icon
   },
   historyButtonIcon: {
     marginRight: spacing.m,
   },
   signOutButton: {
-    //backgroundColor: colors.danger,
     marginHorizontal: spacing.l,
     marginTop: spacing.l,
     marginBottom: spacing.xl,

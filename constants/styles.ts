@@ -24,6 +24,7 @@ export const colors = {
   info: "#0000FF",
   lightGrey: "#F5F5F5",
   shadow: "rgba(0, 0, 0, 0.1)", // Added shadow color
+  lightBackground: "rgba(255,255,255,0.2)", // Added light background color
 };
 
 export const spacing = {

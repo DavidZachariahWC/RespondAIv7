@@ -86,6 +86,7 @@ export default function Context() {
           personalityName as string
         );
         console.log('RESPONSE received:', response);
+        console.log('Context:', contextMessage);
         console.log('Thread ID:', response.threadId);
         console.log('Assistant Message:', response.assistantResponse);
         
@@ -102,9 +103,11 @@ export default function Context() {
         // Add the new conversation
         await addConversation({
           threadId: response.threadId,
-          lastMessage: response.assistantResponse.substring(0, 50) + '...',
+          lastMessage: response.assistantResponse,
           timestamp: Date.now(),
-          personalityName: personalityName as string
+          personalityName: personalityName as string,
+          userId: user.uid,
+          context: contextMessage
         });
 
         // Clear the context and response info after creating the local object
