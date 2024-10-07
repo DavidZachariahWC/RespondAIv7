@@ -83,7 +83,9 @@ export default function Context() {
           responseInfo,
           personalityName as string
         );
-        console.log('Response received:', response);
+        console.log('RESPONSE received:', response);
+        console.log('Thread ID:', response.threadId);
+        console.log('Assistant Message:', response.assistantResponse);
         
         // Clear the context and response info
         clearContext();
@@ -92,7 +94,7 @@ export default function Context() {
         // Navigate to the preview page with the response
         router.push({
           pathname: '/preview',
-          params: { response: response }
+          params: { response: response.assistantResponse, threadId: response.threadId }
         });
       } catch (error) {
         console.error('Failed to send message:', error);

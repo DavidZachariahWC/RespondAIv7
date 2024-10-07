@@ -1,72 +1,34 @@
 
-
 Dear Frontend Engineer,
 
-I hope this message finds you well. I'm writing to inform you about important updates to our messaging API, which now supports continued conversations using the OpenAI Assistants API. Here are the key changes:
+I hope this message finds you well. I'm writing to inform you about an important update to our API responses for both the `/sendMessage` and `/continueThread` endpoints.
 
-1. **Updated /sendMessage Endpoint**
-   - Now returns a `threadId` along with the `assistantResponse`.
-   - Use this `threadId` to continue the conversation on the same thread.
+We've made a crucial modification to ensure that the `threadId` is consistently returned along with the `assistantResponse` in all API responses. This change applies to both endpoints and will help maintain conversation continuity on the frontend.
 
-2. **New /continueThread Endpoint**
-   - Use this to send follow-up messages on an existing thread.
-   - Requires the `threadId` from the previous message in the conversation.
+Here's what you need to know:
 
-Here are the details for both endpoints:
+1. **Updated Response Structure:**
+   Both `/sendMessage` and `/continueThread` endpoints now return responses in the following format:
 
-### /sendMessage Endpoint (Updated)
+   ```json
+   {
+     "assistantResponse": "string",
+     "threadId": "string"
+   }
+   ```
 
-- **URL:** `http://localhost:3000/sendMessage`
-- **Method:** POST
-- **Request Body:**
-  ```json
-  {
-    "userId": "string",
-    "userMessage": "string",
-    "context": "string",
-    "personalityKey": "string"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "assistantResponse": "string",
-    "threadId": "string"
-  }
-  ```
+2. **Usage:**
+   - For new conversations, use the `/sendMessage` endpoint. Store the returned `threadId` for future use.
+   - For continuing conversations, use the `/continueThread` endpoint, providing the stored `threadId` in the request body.
+   - Always save the `threadId` returned in the response, as it may be updated by the backend.
 
-### /continueThread Endpoint (New)
+3. **Implementation:**
+   - Update your API response handling to expect and process the `threadId` along with the `assistantResponse`.
+   - Ensure that you're storing and using the most recent `threadId` for each conversation.
 
-- **URL:** `http://localhost:3000/continueThread`
-- **Method:** POST
-- **Request Body:**
-  ```json
-  {
-    "userId": "string",
-    "userMessage": "string",
-    "context": "string",
-    "personalityKey": "string",
-    "threadId": "string"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "assistantResponse": "string",
-    "threadId": "string"
-  }
-  ```
+This change will allow for more robust conversation management and enable seamless continuation of discussions across multiple interactions.
 
-To implement continued conversations:
-
-1. Store the `threadId` received from the initial `/sendMessage` response.
-2. For follow-up messages, use the `/continueThread` endpoint and include the stored `threadId`.
-3. Continue using the same `threadId` for subsequent messages in the conversation.
-4. Start a new thread (use `/sendMessage`) when the user wants to begin a new conversation.
-
-Error handling remains the same for both endpoints. Please ensure proper validation and error handling on the frontend.
-
-If you have any questions or need clarification, please don't hesitate to reach out.
+If you have any questions or need further clarification, please don't hesitate to reach out.
 
 Best regards,
 Backend Developer

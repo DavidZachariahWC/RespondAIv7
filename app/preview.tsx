@@ -9,7 +9,9 @@ import * as Clipboard from 'expo-clipboard';
 
 export default function Preview() {
   const router = useRouter();
-  const { response } = useLocalSearchParams();
+  const { response, threadId } = useLocalSearchParams();
+
+  console.log('Thread ID in preview:', threadId);
 
   const handleCopyToClipboard = async () => {
     if (response) {
