@@ -7,12 +7,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUpload } from './ManageUploadContext';
 import { colors, typography, spacing, gradientColors } from '../constants/styles';
 import MainButtonsContainer from '../components/MainButtonsContainer';
+import { sendMessage, createAndLogResponseObject } from './api/requests';
+import { useAuth } from './AuthContext';
+import { useConversations } from './useConversations';
 
 export default function Context() {
   const { personalityName: initialPersonalityName } = useLocalSearchParams();
   const [personalityName, setPersonalityName] = useState<string | null>(initialPersonalityName as string | null);
   const router = useRouter();
-  const { contextUploaded, infoUploaded, setContextUploaded, setInfoUploaded } = useUpload();
+  const { 
+    contextUploaded, 
+    infoUploaded, 
+    setContextUploaded, 
+    setInfoUploaded, 
+    contextMessage, 
+    responseInfo, 
+    clearContext, 
+    clearResponseInfo 
+  } = useUpload();
+  const { user, userObject } = useAuth();
+  const { addConversation } = useConversations();
 
   const handleContextPress = useCallback(() => {
     if (!contextUploaded) {
@@ -54,6 +68,65 @@ export default function Context() {
     return (personalityName ? 33.33 : 0) + (contextUploaded ? 33.33 : 0) + (infoUploaded ? 33.33 : 0);
   }, [personalityName, contextUploaded, infoUploaded]);
 
+  const handleGenerate = useCallback(async () => {
+    if (progress > 99) {
+      if (!user || !userObject) {
+        console.error('User not authenticated or user object not available');
+        return;
+      }
+
+      // Navigate to the generatingResponse page first
+      router.push('/generatingResponse');
+
+      try {
+        const response = await sendMessage(
+          user.uid,
+          contextMessage,
+          responseInfo,
+          personalityName as string
+        );
+        console.log('RESPONSE received:', response);
+        console.log('Context:', contextMessage);
+        console.log('Thread ID:', response.threadId);
+        console.log('Assistant Message:', response.assistantResponse);
+        
+        // Create and log the local response object
+        const localResponseObject = await createAndLogResponseObject(
+          response.threadId,
+          response.assistantResponse,
+          user.uid,
+          responseInfo,
+          contextMessage,
+          personalityName as string
+        );
+        
+        // Add the new conversation
+        await addConversation({
+          threadId: response.threadId,
+          lastMessage: response.assistantResponse,
+          timestamp: Date.now(),
+          personalityName: personalityName as string,
+          userId: user.uid,
+          context: contextMessage
+        });
+
+        // Clear the context and response info after creating the local object
+        clearContext();
+        clearResponseInfo();
+        
+        // Navigate to the preview page with the response
+        router.push({
+          pathname: '/preview',
+          params: { response: response.assistantResponse, threadId: response.threadId }
+        });
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        // In case of error, navigate back to the Context page
+        router.back();
+      }
+    }
+  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router, clearContext, clearResponseInfo, addConversation]);
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={styles.gradient}>
@@ -85,12 +158,12 @@ export default function Context() {
 
           <View style={styles.bottomContainer}>
             <TouchableOpacity 
-              style={[styles.doneButton, progress === 100 && styles.doneButtonActive]} 
-              onPress={() => console.log('Done')}
-              disabled={progress !== 100}
+              style={[styles.doneButton, progress > 99 && styles.doneButtonActive]} 
+              onPress={handleGenerate}
+              disabled={progress < 99}
             >
-              <Text style={[styles.doneButtonText, progress === 100 && styles.doneButtonTextActive]}>
-                {progress === 100 ? 'Finish' : 'Generate'}
+              <Text style={[styles.doneButtonText, progress > 99 && styles.doneButtonTextActive]}>
+                {progress > 99 ? 'Generate' : 'Incomplete'}
               </Text>
             </TouchableOpacity>
             <View style={styles.progressBarContainer}>

@@ -1,0 +1,37 @@
+
+Dear Frontend Engineer,
+
+I hope this message finds you well. I'm writing to inform you about an important update to our API responses for both the `/sendMessage` and `/continueThread` endpoints.
+
+We've made a crucial modification to ensure that the `threadId` is consistently returned along with the `assistantResponse` in all API responses. This change applies to both endpoints and will help maintain conversation continuity on the frontend.
+
+Here's what you need to know:
+
+1. **Updated Response Structure:**
+   Both `/sendMessage` and `/continueThread` endpoints now return responses in the following format:
+
+   ```json
+   {
+     "assistantResponse": "string",
+     "threadId": "string"
+   }
+   ```
+
+2. **Usage:**
+   - For new conversations, use the `/sendMessage` endpoint. Store the returned `threadId` for future use.
+   - For continuing conversations, use the `/continueThread` endpoint, providing the stored `threadId` in the request body.
+   - Always save the `threadId` returned in the response, as it may be updated by the backend.
+
+3. **Implementation:**
+   - Update your API response handling to expect and process the `threadId` along with the `assistantResponse`.
+   - Ensure that you're storing and using the most recent `threadId` for each conversation.
+
+This change will allow for more robust conversation management and enable seamless continuation of discussions across multiple interactions.
+
+If you have any questions or need further clarification, please don't hesitate to reach out.
+
+Best regards,
+Backend Developer
+
+---
+

@@ -1,14 +1,48 @@
-import React from "react";
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, StatusBar } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, StatusBar, TextInput, TouchableOpacity } from "react-native";
 import { Stack } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { globalStyles, gradientColors, colors, typography, spacing } from "../constants/styles";
 import { Button } from '@rneui/themed';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAuth } from './AuthContext';
+import { updateUserName } from './api/requests';
 
 export default function AccountDetails() {
   const router = useRouter();
+  const { userObject, setUserObject, user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(userObject?.name || '');
+
+  const handleEditName = () => {
+    console.log('Editing name started');
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    console.log('Name edit cancelled');
+    setNewName(userObject?.name || '');
+    setIsEditing(false);
+  };
+
+  const handleSaveName = async () => {
+    if (!user || !userObject) return;
+
+    try {
+      console.log('Attempting to save new name:', newName);
+      const updatedUserData = await updateUserName(user.uid, newName);
+      setUserObject({
+        name: updatedUserData.name,
+        personalities: updatedUserData.personalities
+      });
+      setIsEditing(false);
+      console.log('Name updated successfully');
+    } catch (error) {
+      console.error('Failed to update name:', error);
+      // Here you might want to show an error message to the user
+    }
+  };
 
   return (
     <>
@@ -32,7 +66,28 @@ export default function AccountDetails() {
               </View>
               
               <View style={styles.content}>
-                <Text style={styles.placeholder}>Account Details Placeholder</Text>
+                <Text style={styles.label}>Name:</Text>
+                {isEditing ? (
+                  <View style={styles.editContainer}>
+                    <TextInput
+                      style={styles.nameInput}
+                      value={newName}
+                      onChangeText={setNewName}
+                      autoFocus
+                    />
+                    <TouchableOpacity onPress={handleSaveName} style={styles.iconButton}>
+                      <Ionicons name="checkmark" size={24} color={colors.white} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleCancelEdit} style={styles.iconButton}>
+                      <Ionicons name="close" size={24} color={colors.white} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity onPress={handleEditName} style={styles.nameContainer}>
+                    <Text style={styles.name}>{userObject?.name || 'Not available'}</Text>
+                    <Ionicons name="create-outline" size={24} color={colors.white} />
+                  </TouchableOpacity>
+                )}
                 <Text style={styles.description}>This is where account information and settings will be displayed.</Text>
               </View>
             </ScrollView>
@@ -71,7 +126,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.l,
   },
-  placeholder: {
+  label: {
+    ...typography.body,
+    color: colors.white,
+    marginBottom: spacing.s,
+  },
+  name: {
     ...typography.h2,
     color: colors.white,
     marginBottom: spacing.m,
@@ -80,5 +140,26 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.white,
     textAlign: 'center',
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  editContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  nameInput: {
+    ...typography.h2,
+    color: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.white,
+    paddingVertical: spacing.m,
+    flex: 1,
+  },
+  iconButton: {
+    padding: spacing.s,
   },
 });

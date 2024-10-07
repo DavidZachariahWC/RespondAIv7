@@ -1,20 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
-
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import { colors, typography, spacing, gradientColors } from "../constants/styles";
 import { useAuth } from './AuthContext';
-import ContinueWithGoogleButton from '../components/ContinueWithGoogle';
 import AuthInput from '../components/AuthInput';
 import AlertComponent from '../components/AlertComponent';
 import LoadingIndicator from '../components/LoadingIndicator';
-import { handleAuthError, handleGoogleSignInError } from './utils/ErrorHandler';
+import { handleAuthError } from './utils/ErrorHandler';
 import { validateEmail, validatePassword, validateName } from './utils/InputValidation';
 import { sendUserData } from './api/requests';
-import { getAuth, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { fetchUserData } from './api/requests';
 
 export default function SignUp() {
   const [name, setName] = useState('');
@@ -23,7 +21,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<null | { title: string; message: string }>(null);
   
-  const { user } = useAuth();
+  const { setUserObject } = useAuth();
   const router = useRouter();
   const auth = getAuth();
 
@@ -45,15 +43,38 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     if (!validateInputs()) return;
-  
+
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
       console.log('User account created & signed in!');
       
+      // Set a basic user object immediately
+      setUserObject({
+        name: name,
+        personalities: {}
+      });
+
       // Send user data to the server
       await sendUserData(name, userCredential.user.uid);
+      console.log('User data sent to server successfully');
+
+      // Fetch the latest user data from the server
+      try {
+        const userData = await fetchUserData(userCredential.user.uid);
+        setUserObject({
+          name: userData.name,
+          personalities: userData.personalities
+        });
+        console.log('Latest user data fetched and set');
+      } catch (fetchError) {
+        console.error('Error fetching user data after sign up:', fetchError);
+      }
+
+      // Navigate to Home page
+      router.replace('/Home');
+
     } catch (error: any) {
       console.error('Sign Up Error:', error.code, error.message);
       const errorMessage = handleAuthError(error);

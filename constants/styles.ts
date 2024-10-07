@@ -1,5 +1,6 @@
 import { TextStyle, ViewStyle } from "react-native";
 import { Colors, gradientColors } from "./Colors";
+import { StyleSheet } from 'react-native';
 
 const lightColors = Colors.light;
 
@@ -22,9 +23,12 @@ export const colors = {
   warning: "#FFA500",
   info: "#0000FF",
   lightGrey: "#F5F5F5",
+  shadow: "rgba(0, 0, 0, 0.1)", // Added shadow color
+  lightBackground: "rgba(255,255,255,0.2)", // Added light background color
 };
 
 export const spacing = {
+  xs: 4, // Added XS spacing
   s: 8,
   m: 16,
   l: 24,
@@ -56,9 +60,15 @@ export const typography: Record<string, TextStyle> = {
     fontFamily: 'CustomFont-Bold',
     color: colors.textSecondary,
   },
+  caption: { // Added caption style
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'CustomFont-Regular',
+    color: colors.textSecondary,
+  },
 };
 
-export const globalStyles: Record<string, ViewStyle> = {
+export const globalStyles = StyleSheet.create({
   gradientBackground: {
     flex: 1,
   },
@@ -75,6 +85,26 @@ export const globalStyles: Record<string, ViewStyle> = {
   buttonText: {
     ...typography.button,
   },
-};
+  emptyMessage: {
+    ...typography.body,
+    color: colors.white,
+    textAlign: 'center',
+    padding: spacing.m,
+    fontSize: 16,
+    fontStyle: 'italic',
+    opacity: 0.8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    marginHorizontal: spacing.m,
+    marginVertical: spacing.l,
+  },
+  shadow: { // Added shadow style
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+});
 
 export { gradientColors };

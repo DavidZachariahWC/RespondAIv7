@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, typography, spacing, gradientColors } from "../constants/styles";
 import { useAuth } from './AuthContext';
-import ContinueWithGoogleButton from '../components/ContinueWithGoogle';
 import AuthInput from '../components/AuthInput';
 import AlertComponent from '../components/AlertComponent';
 import LoadingIndicator from '../components/LoadingIndicator';
 import { handleAuthError } from './utils/ErrorHandler';
-import { sendUserData } from './api/requests';
+import { fetchUserData } from './api/requests';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -20,17 +19,34 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<null | { title: string; message: string }>(null);
   
-  const { user } = useAuth();
+  const { setUserObject } = useAuth();
   const router = useRouter();
   const auth = getAuth();
 
   const handleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log('User signed in successfully');
+      
+      // Fetch user data from the server
+      const userData = await fetchUserData(userCredential.user.uid);
+      console.log('Raw user data received:', userData);
+      
+      if (!userData || typeof userData !== 'object') {
+        throw new Error('Invalid user data received');
+      }
+      
+      const newUserObject = {
+        name: userData.name || 'Unknown',
+        personalities: userData.personalities || {}
+      };
+      setUserObject(newUserObject);
+      console.log('User object successfully constructed:', newUserObject);
+      
+      // Navigation will be handled by the AuthContext
     } catch (error: any) {
-      console.error('Sign In Error:', error.code, error.message);
+      console.error('Sign In Error:', error);
       const errorMessage = handleAuthError(error);
       setError(errorMessage);
     } finally {
@@ -79,7 +95,7 @@ export default function SignIn() {
             </TouchableOpacity>
 
             <Text style={styles.orText}>Or</Text>
-            
+
             <View style={styles.signUpContainer}>
               <Text style={styles.signUpText}>Don't have an account? </Text>
               <TouchableOpacity onPress={() => router.push('/SignUp' as any)}>

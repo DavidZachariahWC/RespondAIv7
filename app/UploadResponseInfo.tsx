@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
@@ -9,16 +9,22 @@ import { useUpload } from './ManageUploadContext';
 
 export default function UploadResponseInfo() {
   const router = useRouter();
-  const { infoUploaded, setInfoUploaded } = useUpload();
-  const [responseInfo, setResponseInfo] = useState('');
+  const { infoUploaded, setInfoUploaded, responseInfo, setResponseInfo } = useUpload();
+  const [responseInfoText, setResponseInfoText] = useState(responseInfo);
+
+  useEffect(() => {
+    setResponseInfo(responseInfoText);
+  }, [responseInfoText, setResponseInfo]);
 
   const handleDone = () => {
-    if (responseInfo.trim() !== '') {
+    if (responseInfoText.trim() !== '') {
+      setResponseInfo(responseInfoText.trim());
       setInfoUploaded(true);
       router.back();
     } else {
       // Show an error or alert that no input was provided
       console.log('Please provide response information');
+      // You might want to show a more user-friendly alert here
     }
   };
 
@@ -46,8 +52,8 @@ export default function UploadResponseInfo() {
               multiline
               placeholder="Provide response info here..."
               placeholderTextColor={colors.black} // Changed to black
-              value={responseInfo}
-              onChangeText={setResponseInfo}
+              value={responseInfoText}
+              onChangeText={setResponseInfoText}
             />
             <View style={styles.exampleBox}>
               <Text style={styles.exampleText}>Ex: im busy reschedule for the next day</Text>

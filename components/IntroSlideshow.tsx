@@ -74,7 +74,7 @@ const IntroSlideshow: React.FC = () => {
         <Text style={styles.signUpDescription}>{item.description}</Text>
         <Button
           title="Sign Up"
-          onPress={() => router.push('/SignIn')}
+          onPress={() => router.push('/SignUp')}  // Changed from '/SignIn' to '/SignUp'
           buttonStyle={styles.signUpButton}
           titleStyle={styles.signUpButtonText}
           icon={

@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, StatusBar, FlatList, Animated
 import { useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, typography, spacing, gradientColors } from '../constants/styles';
+import { globalStyles, colors, typography, spacing, gradientColors } from '../constants/styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useAuth } from './AuthContext';
 // Updated personality type to include an id
 type Personality = {
   id: number;
@@ -34,13 +34,15 @@ export default function Respond() {
   const router = useRouter();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [listHeight, setListHeight] = useState(0);
+  const { userObject } = useAuth();
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     { useNativeDriver: false }
   );
 
-  const indicatorSize = listHeight / personalities.length;
+  const personalitiesArray = userObject?.personalities ? Object.values(userObject.personalities).map(p => p.personality) : [];
+  const indicatorSize = listHeight / (personalitiesArray.length || 1);
   const indicatorTranslate = scrollY.interpolate({
     inputRange: [0, listHeight],
     outputRange: [0, listHeight - indicatorSize],
@@ -48,11 +50,11 @@ export default function Respond() {
   });
 
   // Navigation function to Context screen
-  const navigateToContext = useCallback((personality: Personality) => {
+  const navigateToContext = useCallback((personality: string) => {
     try {
       router.push({
         pathname: "/Context", 
-        params: { personalityId: personality.id, personalityName: personality.name }
+        params: { personalityName: personality }
       });
     } catch (error) {
       console.error("Navigation error:", error);
@@ -61,9 +63,9 @@ export default function Respond() {
   }, [router]);
 
   // Render item function for FlatList
-  const renderPersonalityButton = useCallback(({ item }: { item: Personality }) => (
+  const renderPersonalityButton = useCallback(({ item }: { item: string }) => (
     <PersonalityButton 
-      name={item.name} 
+      name={item} 
       onPress={() => navigateToContext(item)} 
     />
   ), [navigateToContext]);
@@ -89,14 +91,20 @@ export default function Respond() {
             <Text style={styles.title}>Select Personality</Text>
 
             <View style={styles.listContainer} onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}>
-              <FlatList
-                data={personalities}
-                renderItem={renderPersonalityButton}
-                keyExtractor={(item) => item.id.toString()}
-                showsVerticalScrollIndicator={false}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
-              />
+              {personalitiesArray.length > 0 ? (
+                <FlatList
+                  data={personalitiesArray}
+                  renderItem={renderPersonalityButton}
+                  keyExtractor={(item, index) => index.toString()}
+                  showsVerticalScrollIndicator={false}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                />
+              ) : (
+                <Text style={globalStyles.emptyMessage}>
+                  There are no personalities associated with your profile. Create one below!
+                </Text>
+              )}
               <View style={styles.customScrollbarContainer}>
                 <Animated.View 
                   style={[

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
@@ -9,15 +9,25 @@ import { useUpload } from './ManageUploadContext';
 
 export default function UploadContext() {
   const router = useRouter();
-  const { contextUploaded, setContextUploaded } = useUpload();
-  const [message, setMessage] = useState('');
+  const { contextUploaded, setContextUploaded, contextMessage, setContextMessage } = useUpload();
+  const [message, setMessage] = useState(contextMessage);
+
+  useEffect(() => {
+    setContextMessage(message);
+  }, [message, setContextMessage]);
 
   const handleDone = () => {
-    if (message.trim() !== '' || contextUploaded) {
+    if (message.trim() !== '') {
+      setContextMessage(message.trim());
+      setContextUploaded(true);
+      router.back();
+    } else if (contextUploaded) {
+      // If a screenshot was uploaded, allow to proceed
       router.back();
     } else {
       // Show an error or alert that no input was provided
       console.log('Please enter a message or upload a screenshot');
+      // You might want to show a more user-friendly alert here
     }
   };
 
