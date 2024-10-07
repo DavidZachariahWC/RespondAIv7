@@ -72,3 +72,22 @@ export const sendMessage = async (
     throw new Error('Failed to send message. Please try again.');
   }
 };
+
+// New function to create and log the local object
+export const createAndLogResponseObject = (
+  threadId: string,
+  assistantResponse: string,
+  userId: string,
+  responseInfo: string,
+  contextMessage: string
+) => {
+  const responseObject = {
+    threadId,
+    assistantResponse,
+    userId,
+    responseInfo,
+    message: contextMessage
+  };
+  console.log('Local response object:', responseObject);
+  return responseObject;
+};

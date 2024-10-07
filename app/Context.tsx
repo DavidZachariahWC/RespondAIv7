@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUpload } from './ManageUploadContext';
 import { colors, typography, spacing, gradientColors } from '../constants/styles';
 import MainButtonsContainer from '../components/MainButtonsContainer';
-import { sendMessage } from './api/requests';
+import { sendMessage, createAndLogResponseObject } from './api/requests';
 import { useAuth } from './AuthContext';
 
 export default function Context() {
@@ -87,7 +87,16 @@ export default function Context() {
         console.log('Thread ID:', response.threadId);
         console.log('Assistant Message:', response.assistantResponse);
         
-        // Clear the context and response info
+        // Create and log the local response object
+        const localResponseObject = createAndLogResponseObject(
+          response.threadId,
+          response.assistantResponse,
+          user.uid,
+          responseInfo,
+          contextMessage
+        );
+        
+        // Clear the context and response info after creating the local object
         clearContext();
         clearResponseInfo();
         
