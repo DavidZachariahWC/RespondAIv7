@@ -8,24 +8,24 @@ import { colors, typography, gradientColors, spacing, globalStyles } from '../co
 import * as Clipboard from 'expo-clipboard';
 import { useConversations, Conversation } from './useConversations';
 import { continueThread } from './api/requests';
-import { useAuth } from './AuthContext'; // Import useAuth hook
+import { useAuth } from './AuthContext';
 
 export default function Preview() {
   const router = useRouter();
   const { threadId } = useLocalSearchParams();
-  const { getConversationByThreadId, updateConversation } = useConversations();
+  const { user } = useAuth();
+  const { getConversationByThreadId, updateConversation } = useConversations(user?.uid || '');
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [customModifications, setCustomModifications] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const { user } = useAuth(); // Get the current user
 
   useEffect(() => {
-    if (threadId) {
+    if (threadId && user) {
       const fetchedConversation = getConversationByThreadId(threadId as string);
-      console.log('Fetched conversation:', fetchedConversation); // Log the fetched conversation
+      console.log('Fetched conversation:', fetchedConversation);
       setConversation(fetchedConversation);
     }
-  }, [threadId, getConversationByThreadId]);
+  }, [threadId, getConversationByThreadId, user]);
 
   const handleCopyToClipboard = async () => {
     if (conversation?.lastMessage) {
@@ -46,7 +46,9 @@ export default function Preview() {
 
     setIsRegenerating(true);
     const additionalInfo = customModifications.trim();
-    const userMessage = `The user wants the response rewritten and has${additionalInfo ? '' : ' not'} provided the following additional information: ${additionalInfo}`;
+    const userMessage = additionalInfo
+      ? `Rewrite the message with the following additional information: ${additionalInfo}`
+      : "Rewrite the message.";
 
     console.log('User message for regeneration:', userMessage); // Log the user message
     console.log('Context for regeneration:', conversation.context); // Log the context

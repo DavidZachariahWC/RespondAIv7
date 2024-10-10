@@ -25,8 +25,8 @@ export default function Context() {
     clearContext, 
     clearResponseInfo 
   } = useUpload();
-  const { user, userObject } = useAuth();
-  const { addConversation } = useConversations();
+  const { user } = useAuth();
+  const { addConversation } = useConversations(user?.uid || '');
 
   const handleContextPress = useCallback(() => {
     if (!contextUploaded) {
@@ -70,8 +70,8 @@ export default function Context() {
 
   const handleGenerate = useCallback(async () => {
     if (progress > 99) {
-      if (!user || !userObject) {
-        console.error('User not authenticated or user object not available');
+      if (!user) {
+        console.error('User not authenticated');
         return;
       }
 
@@ -125,7 +125,7 @@ export default function Context() {
         router.back();
       }
     }
-  }, [personalityName, contextMessage, responseInfo, progress, user, userObject, router, clearContext, clearResponseInfo, addConversation]);
+  }, [personalityName, contextMessage, responseInfo, progress, user, router, clearContext, clearResponseInfo, addConversation]);
 
   return (
     <View style={styles.container}>
