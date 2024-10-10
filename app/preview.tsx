@@ -46,7 +46,9 @@ export default function Preview() {
 
     setIsRegenerating(true);
     const additionalInfo = customModifications.trim();
-    const userMessage = `The user wants the response rewritten but has${additionalInfo ? '' : ' not'} provided additional information: ${additionalInfo}`;
+    const userMessage = additionalInfo
+      ? `Rewrite the message with the following additional information: ${additionalInfo}`
+      : "Rewrite the message.";
 
     console.log('User message for regeneration:', userMessage); // Log the user message
     console.log('Context for regeneration:', conversation.context); // Log the context
