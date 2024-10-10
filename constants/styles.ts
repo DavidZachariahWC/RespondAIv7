@@ -44,8 +44,8 @@ export const typography: Record<string, TextStyle> = {
   },
   h2: {
     fontSize: 24,
-    fontWeight: "600",
-    fontFamily: 'CustomFont-Bold',
+    fontWeight: "100",
+    fontFamily: 'CustomFont-Regular',
     color: colors.text,
   },
   body: {

@@ -1,106 +1,140 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, Alert } from "react-native";
+import React, { useState, useCallback, useRef } from "react";
+import { View, Text, StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, typography, spacing, globalStyles, gradientColors } from "../constants/styles";
-import { Button } from '@rneui/themed';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AppRoutes } from '../types/routes';
-import { getAuth, signOut } from "firebase/auth";
-import { useConversations } from './useConversations';
-import ConversationCard from '../components/conversationCard';
-import { useAuth } from './AuthContext';
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuth } from "./AuthContext";
 
 export default function Home() {
   const router = useRouter();
-  const auth = getAuth();
-  const { user } = useAuth();
-  const { conversations, deleteConversation } = useConversations(user?.uid || null);
+  const { userObject } = useAuth();
+  const [message, setMessage] = useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity value
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      console.log('User signed out successfully');
-      // Router will automatically redirect to SignIn page due to auth state change
-    } catch (error) {
-      console.error('Sign out error', error);
-      Alert.alert('Sign Out Error', 'An error occurred while signing out. Please try again.');
-    }
+  const wordCount = useCallback(() => {
+    return message.trim().split(/\s+/).filter(Boolean).length;
+  }, [message]);
+
+  const handleGenerateResponse = () => {
+    // Start fade-out animation for text and icons
+    Animated.timing(fadeAnim, {
+      toValue: 0, // Fade to opacity 0
+      duration: 500, // Duration in milliseconds
+      useNativeDriver: true,
+    }).start(() => {
+      // After animation completes, navigate to StepTwo
+      router.push("/stepTwo" as any);
+    });
   };
 
-  const handleDeleteConversation = (threadId: string) => {
-    Alert.alert(
-      "Delete Conversation",
-      "Are you sure you want to delete this conversation?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        { 
-          text: "Delete", 
-          onPress: () => {
-            deleteConversation(threadId);
-            // The list will automatically update due to state change in useConversations
-          },
-          style: "destructive"
-        }
-      ]
-    );
+  const getFirstName = (fullName: string) => {
+    return fullName.split(" ")[0];
+  };
+
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
       <LinearGradient
         colors={gradientColors}
         style={globalStyles.gradientBackground}
       >
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.header}>
-              <Text style={styles.title}>RespondAI</Text>
-              <Button
-                icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
-                type="clear"
-                onPress={() => router.push("/Settings" as any)}
-              />
-            </View>
-            <View style={styles.content}>
-              <Text style={styles.subtitle}>Start a new conversation</Text>
-              <View style={styles.buttonContainer}>
-                <Button
-                  title="Respond to Message"
-                  icon={<Ionicons name="chatbubble-outline" size={24} color={colors.white} style={styles.buttonIcon} />}
-                  buttonStyle={styles.button}
-                  titleStyle={styles.buttonTitle}
-                  onPress={() => router.push("/Context" as any)}
-                />
+            {/* Animated View for Header Text */}
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <View style={styles.header}>
+                <Text style={styles.welcomeText}>
+                  Welcome, {userObject?.name ? getFirstName(userObject.name) : "User"}.
+                </Text>
               </View>
-            </View>
-            <View style={styles.historySection}>
-              <Text style={styles.historyTitle}>Recent Chats</Text>
-              {conversations.length > 0 ? (
-                conversations.map((conversation) => (
-                  <ConversationCard
-                    key={conversation.threadId}
-                    threadId={conversation.threadId}
-                    lastMessage={conversation.lastMessage}
-                    onDelete={handleDeleteConversation}
+            </Animated.View>
+
+            {/* Animated View for Content Text */}
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <View style={styles.content}>
+                <Text style={styles.subtitle}>
+                  First, provide the message you received
+                </Text>
+                <View style={styles.textBoxContainer}>
+                  <TextInput
+                    style={styles.textBox}
+                    multiline
+                    placeholder="Type or paste your message here..."
+                    value={message}
+                    onChangeText={setMessage}
                   />
-                ))
-              ) : (
-                <Text style={styles.noConversationsText}>No recent conversations</Text>
-              )}
-            </View>
-            <Button
-              title="Sign Out"
-              onPress={handleSignOut}
-              buttonStyle={styles.signOutButton}
-              titleStyle={styles.signOutButtonTitle}
-              icon={<Ionicons name="log-out-outline" size={24} color={colors.white} style={styles.signOutButtonIcon} />}
-            />
+                  <Text style={styles.wordCount}>{wordCount()}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.generateButton}
+                  onPress={handleGenerateResponse}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.generateButtonText}>Generate Response</Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
           </ScrollView>
+
+          {/* Animated View for Bottom Icons */}
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <View style={styles.bottomIcons}>
+              <TouchableOpacity onPress={() => router.push("/Settings" as any)}>
+                <Ionicons
+                  name="settings-outline"
+                  size={24}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push("/RecentChats" as any)}
+              >
+                <Ionicons
+                  name="chatbubbles-outline"
+                  size={24}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openModal}>
+                <Ionicons
+                  name="help-circle-outline"
+                  size={24}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          <Modal
+            visible={isModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={closeModal}
+          >
+            <TouchableWithoutFeedback onPress={closeModal}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalText}>
+                    This is a placeholder for help content.
+                  </Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -113,128 +147,128 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   scrollContent: {
     flexGrow: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: spacing.l,
+    flexDirection: "column",
+    justifyContent: "center", // Center the welcome header
+    alignItems: "center",
+    paddingTop: spacing.xl + 50,
     paddingHorizontal: spacing.l,
-    paddingBottom: spacing.s,
+    paddingBottom: spacing.m, // Reduced padding to bring subtitle closer
   },
-  title: {
+  welcomeText: {
     ...typography.h1,
     color: colors.white,
-    fontSize: 32,
+    fontSize: 36, // Increased font size for the welcome message
+    textAlign: "center",
+    marginBottom: spacing.s, // Space below the welcome message
   },
   content: {
     justifyContent: "flex-start",
     alignItems: "center",
     paddingHorizontal: spacing.l,
-    paddingTop: spacing.m,
+    // Removed increased padding to position content appropriately
   },
   subtitle: {
     ...typography.h2,
     color: colors.white,
     marginBottom: spacing.m,
     textAlign: "center",
+    fontWeight: "normal", // Make subtitle not bold
+    paddingBottom: spacing.xl + 20,
   },
-  buttonContainer: {
-    width: '100%',
+  textBoxContainer: {
+    width: "100%",
     marginTop: spacing.s,
-  },
-  button: {
-    width: '100%',
-    height: 60,
-    borderRadius: 30,
-    marginBottom: spacing.s,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  buttonIcon: {
-    marginRight: spacing.m,
-  },
-  buttonTitle: {
-    ...typography.button,
-    color: colors.white,
-  },
-  buttonSubtext: {
-    ...typography.body,
-    color: colors.white,
-    textAlign: "center",
     marginBottom: spacing.m,
-    opacity: 0.8,
-  },
-  historySection: {
-    paddingHorizontal: spacing.l,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.l,
-  },
-  historyTitle: {
-    ...typography.h2,
-    color: colors.white,
-    marginBottom: spacing.m,
-  },
-  historyButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.m,
+    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 6, // Increased shadowOffset for more 3D effect
+    },
+    shadowOpacity: 0.4, // Increased shadowOpacity for stronger shadow
+    shadowRadius: 6, // Increased shadow radius for more spread
+    elevation: 12, // Increased elevation for enhanced 3D effect
+    borderRadius: 10,
     backgroundColor: colors.white,
-    borderRadius: 15,
+    borderColor: "black", // Add thin black outline
+    borderWidth: 1, // Add thin black outline
   },
-  historyButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 15,
-    height: 70,
-    justifyContent: 'flex-start',
-    paddingHorizontal: spacing.m,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  deleteButton: {
-    padding: spacing.s,
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: 0,
-    height: '100%',
-    justifyContent: 'center',
-  },
-  historyButtonTitle: {
+  textBox: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    padding: spacing.m,
+    minHeight: 100,
+    maxHeight: 200,
     ...typography.body,
-    color: colors.primary,
-    textAlign: 'left',
-    flex: 1,
-    marginLeft: spacing.m,
-    fontSize: 14,
-    paddingRight: 40, // Add right padding to prevent text from being covered by delete icon
+    color: colors.textDark,
   },
-  historyButtonIcon: {
-    marginRight: spacing.m,
+  wordCount: {
+    position: "absolute",
+    bottom: 5,
+    right: 10,
+    ...typography.caption,
+    color: colors.textLight,
   },
-  signOutButton: {
-    marginHorizontal: spacing.l,
-    marginTop: spacing.l,
-    marginBottom: spacing.xl,
-    borderRadius: 30,
-    height: 50,
+  generateButton: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    padding: spacing.m,
+    width: "100%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10, // Increased shadowOffset for deeper shadow
+    },
+    shadowOpacity: 0.6, // Increased shadowOpacity for stronger shadow
+    shadowRadius: 10, // Increased shadowRadius for more spread
+    elevation: 20, // Further increased elevation for enhanced 3D effect
+    borderColor: "black", // Add thin black outline
+    borderWidth: 1, // Add thin black outline
+    transform: [{ translateY: 2 }], // Slight downward translation to mimic depth
   },
-  signOutButtonTitle: {
+  generateButtonText: {
     ...typography.button,
-    color: colors.white,
+    color: colors.primary,
+    fontWeight: "bold",
   },
-  signOutButtonIcon: {
-    marginRight: spacing.s,
+  bottomIcons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.l,
+    paddingBottom: spacing.m,
+    opacity: 0.4,
   },
-  noConversationsText: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.9)", // Semi-transparent white overlay
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: spacing.l,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
     ...typography.body,
-    color: colors.white,
-    textAlign: 'center',
-    marginTop: spacing.m,
+    color: colors.textDark,
+    textAlign: "center",
   },
 });

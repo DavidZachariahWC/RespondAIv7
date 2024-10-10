@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
@@ -12,7 +12,7 @@ import { useAuth } from './AuthContext';
 import { useConversations } from './useConversations';
 
 export default function Context() {
-  const { personalityName: initialPersonalityName } = useLocalSearchParams();
+  const { personalityName: initialPersonalityName, initialMessage } = useLocalSearchParams();
   const [personalityName, setPersonalityName] = useState<string | null>(initialPersonalityName as string | null);
   const router = useRouter();
   const { 
@@ -21,12 +21,20 @@ export default function Context() {
     setContextUploaded, 
     setInfoUploaded, 
     contextMessage, 
+    setContextMessage,
     responseInfo, 
     clearContext, 
     clearResponseInfo 
   } = useUpload();
   const { user } = useAuth();
   const { addConversation } = useConversations(user?.uid || '');
+
+  useEffect(() => {
+    if (initialMessage) {
+      setContextMessage(initialMessage as string);
+      setContextUploaded(true);
+    }
+  }, [initialMessage, setContextMessage, setContextUploaded]);
 
   const handleContextPress = useCallback(() => {
     if (!contextUploaded) {

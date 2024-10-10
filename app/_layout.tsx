@@ -44,6 +44,9 @@ export default function Layout() {
           <Stack.Screen name="SignUp" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="generatingResponse" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="preview" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="RecentChats" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="stepOne" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="stepTwo" options={{ animation: 'none', headerShown: false }} />
         </Stack>
       </View>
       </UploadProvider>
