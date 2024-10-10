@@ -50,71 +50,60 @@ export default function Home() {
   };
 
   return (
-    <>
-      <View style={styles.container}>
-        <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-        <LinearGradient
-          colors={gradientColors}
-          style={globalStyles.gradientBackground}
-        >
-          <SafeAreaView style={styles.safeArea}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-              <View style={styles.header}>
-                <Text style={styles.title}>RespondAI</Text>
+    <View style={styles.container}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <LinearGradient
+        colors={gradientColors}
+        style={globalStyles.gradientBackground}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.header}>
+              <Text style={styles.title}>RespondAI</Text>
+              <Button
+                icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
+                type="clear"
+                onPress={() => router.push("/Settings" as any)}
+              />
+            </View>
+            <View style={styles.content}>
+              <Text style={styles.subtitle}>Start a new conversation</Text>
+              <View style={styles.buttonContainer}>
                 <Button
-                  icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
-                  type="clear"
-                  onPress={() => router.push("/Settings" as any)}
+                  title="Respond to Message"
+                  icon={<Ionicons name="chatbubble-outline" size={24} color={colors.white} style={styles.buttonIcon} />}
+                  buttonStyle={styles.button}
+                  titleStyle={styles.buttonTitle}
+                  onPress={() => router.push("/Context" as any)}
                 />
               </View>
-              <View style={styles.content}>
-                <Text style={styles.subtitle}>Choose your chat style</Text>
-                <View style={styles.buttonContainer}>
-                  <Button
-                    title="Respond to Message"
-                    icon={<Ionicons name="briefcase-outline" size={24} color={colors.white} style={styles.buttonIcon} />}
-                    buttonStyle={[styles.button, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-                    titleStyle={styles.buttonTitle}
-                    onPress={() => router.push("/Context" as any)}
+            </View>
+            <View style={styles.historySection}>
+              <Text style={styles.historyTitle}>Recent Chats</Text>
+              {conversations.length > 0 ? (
+                conversations.map((conversation) => (
+                  <ConversationCard
+                    key={conversation.threadId}
+                    threadId={conversation.threadId}
+                    lastMessage={conversation.lastMessage}
+                    onDelete={handleDeleteConversation}
                   />
-                  <Text style={styles.buttonSubtext}>Respond to a message</Text>
-                  <Button
-                    title="Casual"
-                    icon={<Ionicons name="chatbubbles-outline" size={24} color={colors.white} style={styles.buttonIcon} />}
-                    buttonStyle={[styles.button, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-                    titleStyle={styles.buttonTitle}
-                    onPress={() => router.push("/CasualChat" as any)}
-                  />
-                  <Text style={styles.buttonSubtext}>For friends, drama, and fun</Text>
-                </View>
-              </View>
-              <View style={styles.historySection}>
-                <Text style={styles.historyTitle}>Recent Chats</Text>
-                {conversations.length > 0 ? (
-                  conversations.map((conversation) => (
-                    <ConversationCard
-                      key={conversation.threadId}
-                      threadId={conversation.threadId}
-                      lastMessage={conversation.lastMessage}
-                      onDelete={handleDeleteConversation}
-                    />
-                  ))
-                ) : (
-                  <Text style={styles.noConversationsText}>No recent conversations</Text>
-                )}
-              </View>
-              <Button
-                title="Sign Out"
-                onPress={handleSignOut}
-                buttonStyle={styles.signOutButton}
-                titleStyle={styles.signOutButtonTitle}
-                icon={<Ionicons name="log-out-outline" size={24} color={colors.white} style={styles.signOutButtonIcon} />}
-              />
-            </ScrollView>
-          </SafeAreaView>
-        </LinearGradient>
-      </View>
-    </>
+                ))
+              ) : (
+                <Text style={styles.noConversationsText}>No recent conversations</Text>
+              )}
+            </View>
+            <Button
+              title="Sign Out"
+              onPress={handleSignOut}
+              buttonStyle={styles.signOutButton}
+              titleStyle={styles.signOutButtonTitle}
+              icon={<Ionicons name="log-out-outline" size={24} color={colors.white} style={styles.signOutButtonIcon} />}
+            />
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 }
 
