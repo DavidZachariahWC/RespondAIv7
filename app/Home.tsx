@@ -9,16 +9,13 @@ import { AppRoutes } from '../types/routes';
 import { getAuth, signOut } from "firebase/auth";
 import { useConversations } from './useConversations';
 import ConversationCard from '../components/conversationCard';
+import { useAuth } from './AuthContext';
 
 export default function Home() {
   const router = useRouter();
   const auth = getAuth();
-  const { conversations, deleteConversation } = useConversations();
-
-  // Use the AppRoutes type when navigating
-  const handleNavigation = (route: AppRoutes) => {
-    router.push(route as any);
-  };
+  const { user } = useAuth();
+  const { conversations, deleteConversation } = useConversations(user?.uid || null);
 
   const handleSignOut = async () => {
     try {

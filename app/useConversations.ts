@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 export interface Conversation {
   threadId: string;
@@ -10,16 +11,21 @@ export interface Conversation {
   context: string;
 }
 
-export const useConversations = () => {
+export const useConversations = (userId: string | null) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
   useEffect(() => {
-    loadConversations();
-  }, []);
+    if (userId) {
+      loadConversations(userId);
+    } else {
+      setConversations([]); // Clear conversations in memory when there's no user
+    }
+  }, [userId]);
 
-  const loadConversations = async () => {
+  const loadConversations = async (uid: string) => {
     try {
-      const storedConversations = await AsyncStorage.getItem('conversations');
+      const userSpecificKey = `conversations_${uid}`;
+      const storedConversations = await AsyncStorage.getItem(userSpecificKey);
       if (storedConversations) {
         setConversations(JSON.parse(storedConversations));
       }
@@ -31,7 +37,9 @@ export const useConversations = () => {
   const addConversation = async (newConversation: Conversation) => {
     try {
       const updatedConversations = [newConversation, ...conversations];
-      await AsyncStorage.setItem('conversations', JSON.stringify(updatedConversations));
+      const userSpecificKey = `conversations_${userId}`;
+      await AsyncStorage.setItem(userSpecificKey, JSON.stringify(updatedConversations));
+      await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error adding conversation:', error);
@@ -47,7 +55,9 @@ export const useConversations = () => {
       const updatedConversations = conversations.map(conv => 
         conv.threadId === updatedConversation.threadId ? updatedConversation : conv
       );
-      await AsyncStorage.setItem('conversations', JSON.stringify(updatedConversations));
+      const userSpecificKey = `conversations_${userId}`;
+      await AsyncStorage.setItem(userSpecificKey, JSON.stringify(updatedConversations));
+      await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error updating conversation:', error);
@@ -57,7 +67,9 @@ export const useConversations = () => {
   const deleteConversation = async (threadId: string) => {
     try {
       const updatedConversations = conversations.filter(conv => conv.threadId !== threadId);
-      await AsyncStorage.setItem('conversations', JSON.stringify(updatedConversations));
+      const userSpecificKey = `conversations_${userId}`;
+      await AsyncStorage.setItem(userSpecificKey, JSON.stringify(updatedConversations));
+      await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error deleting conversation:', error);
@@ -66,3 +78,5 @@ export const useConversations = () => {
 
   return { conversations, addConversation, getConversationByThreadId, updateConversation, deleteConversation };
 };
+
+// Remove the logoutUser function

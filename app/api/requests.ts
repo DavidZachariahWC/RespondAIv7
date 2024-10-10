@@ -1,6 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Conversation } from '../useConversations';
+import * as SecureStore from 'expo-secure-store';
 
 export const sendUserData = async (name: string, userId: string): Promise<any> => {
     try {
@@ -103,10 +104,14 @@ export const createAndLogResponseObject = async (
       userId,
       context: contextMessage // Using contextMessage as the context
     };
-    const storedConversations = await AsyncStorage.getItem('conversations');
+    const userSpecificKey = `conversations_${userId}`;
+    const storedConversations = await AsyncStorage.getItem(userSpecificKey);
     let conversations: Conversation[] = storedConversations ? JSON.parse(storedConversations) : [];
     conversations = [newConversation, ...conversations];
-    await AsyncStorage.setItem('conversations', JSON.stringify(conversations));
+    await AsyncStorage.setItem(userSpecificKey, JSON.stringify(conversations));
+
+    // Optionally, encrypt sensitive data
+    await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(conversations));
   } catch (error) {
     console.error('Error saving conversation:', error);
   }
