@@ -47,7 +47,7 @@ export default function Preview() {
     setIsRegenerating(true);
     const additionalInfo = customModifications.trim();
     const userMessage = additionalInfo
-      ? `Rewrite the message with the following additional information: ${additionalInfo}`
+      ? `Rewrite the message with the following additional information: ${additionalInfo} \n Your rewrite is seperate from any previous attempts and each rewrite has no impact or relation to the previous ones.`
       : "Rewrite the message.";
 
     console.log('User message for regeneration:', userMessage); // Log the user message
