@@ -1,14 +1,37 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, StatusBar } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, StatusBar, Alert, Modal, TouchableWithoutFeedback } from "react-native";
 import { useRouter } from "expo-router";
 import { colors, typography, spacing, globalStyles, gradientColors } from "../constants/styles";
 import { Button, Card } from '@rneui/themed';
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
+import { getAuth, signOut } from 'firebase/auth';
 
 export default function Settings() {
   const router = useRouter();
+  const auth = getAuth();
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      console.log('User signed out successfully');
+      // Router will automatically redirect to SignIn page due to auth state change
+    } catch (error) {
+      console.error('Sign out error', error);
+      Alert.alert('Sign Out Error', 'An error occurred while signing out. Please try again.');
+    }
+  };
+
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
 
   return (
     <>
@@ -38,36 +61,51 @@ export default function Settings() {
                 onPress={() => router.push("/AccountDetails")}
               />
 
-              <Card containerStyle={styles.card}>
-                <Card.Title style={styles.cardTitle}>
-                  <Ionicons name="briefcase-outline" size={24} color={colors.primary} style={styles.cardIcon} />
-                  Adjust Professional Personality
-                </Card.Title>
-                <Card.Divider />
-                <Text style={styles.cardText}>Customize your AI's professional tone and style.</Text>
-                <Button
-                  title="Customize"
-                  buttonStyle={styles.button}
-                  titleStyle={styles.buttonText}
-                />
-              </Card>
+              <Button
+                title="View Personalities"
+                icon={<Ionicons name="people-outline" size={24} color={colors.primary} style={styles.buttonIcon} />}
+                buttonStyle={styles.accountButton}
+                titleStyle={styles.accountButtonText}
+                onPress={() => router.push("/viewPersonalities")}
+              />
 
-              <Card containerStyle={styles.card}>
-                <Card.Title style={styles.cardTitle}>
-                  <Ionicons name="chatbubbles-outline" size={24} color={colors.primary} style={styles.cardIcon} />
-                  Adjust Casual Personality
-                </Card.Title>
-                <Card.Divider />
-                <Text style={styles.cardText}>Customize your AI's casual tone and style.</Text>
-                <Button
-                  title="Customize"
-                  buttonStyle={styles.button}
-                  titleStyle={styles.buttonText}
-                />
-              </Card>
+              {/* Contact Us Button */}
+              <Button
+                title="Contact Us"
+                icon={<Ionicons name="mail-outline" size={24} color={colors.primary} style={styles.buttonIcon} />}
+                buttonStyle={styles.accountButton}
+                titleStyle={styles.accountButtonText}
+                onPress={openModal}
+              />
+
+              <Button
+                title="Sign Out"
+                icon={<Ionicons name="log-out-outline" size={24} color={colors.white} style={styles.buttonIcon} />}
+                buttonStyle={[styles.accountButton, styles.signOutButton]}
+                titleStyle={[styles.accountButtonText, styles.signOutButtonText]}
+                onPress={handleSignOut}
+              />
             </ScrollView>
           </SafeAreaView>
         </LinearGradient>
+
+        {/* Modal for Contact Us */}
+        <Modal
+          visible={isModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={closeModal}
+        >
+          <TouchableWithoutFeedback onPress={closeModal}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalText}>
+                  Support: respond@westcoastseller.com
+                </Text>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
       </View>
     </>
   );
@@ -113,34 +151,36 @@ const styles = StyleSheet.create({
   buttonIcon: {
     marginRight: spacing.s,
   },
-  card: {
-    borderRadius: 15,
-    marginHorizontal: spacing.m,
-    marginBottom: spacing.m,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+  signOutButton: {
+    backgroundColor: '#b23b3b',
   },
-  cardTitle: {
-    ...typography.h2,
-    color: colors.primary,
-    marginBottom: spacing.s,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardIcon: {
-    marginRight: spacing.s,
-  },
-  cardText: {
-    ...typography.body,
-    color: colors.text,
-    marginBottom: spacing.m,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: spacing.s,
-  },
-  buttonText: {
-    ...typography.button,
+  signOutButtonText: {
     color: colors.white,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: spacing.l,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    ...typography.body,
+    color: colors.textDark,
+    textAlign: "center",
   },
 });

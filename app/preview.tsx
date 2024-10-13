@@ -1,14 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button } from '@rneui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, typography, gradientColors, spacing, globalStyles } from '../constants/styles';
+import {
+  colors,
+  typography,
+  gradientColors,
+  spacing,
+  globalStyles,
+} from '../constants/styles';
 import * as Clipboard from 'expo-clipboard';
 import { useConversations, Conversation } from './useConversations';
 import { continueThread } from './api/requests';
 import { useAuth } from './AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Preview() {
   const router = useRouter();
@@ -32,9 +49,10 @@ export default function Preview() {
       try {
         await Clipboard.setStringAsync(conversation.lastMessage);
         console.log('Text copied to clipboard');
-        // You might want to show a toast or some feedback here
+        Alert.alert('Copied', 'Response copied to clipboard.');
       } catch (error) {
         console.error('Failed to copy text: ', error);
+        Alert.alert('Error', 'Failed to copy text.');
       }
     }
   };
@@ -42,16 +60,11 @@ export default function Preview() {
   const handleRegenerate = async () => {
     if (!conversation || !user) return;
 
-    console.log('Current conversation before regeneration:', conversation); // Log the current conversation
-
     setIsRegenerating(true);
     const additionalInfo = customModifications.trim();
     const userMessage = additionalInfo
-      ? `Rewrite the message with the following additional information: ${additionalInfo} \n Your rewrite is seperate from any previous attempts and each rewrite has no impact or relation to the previous ones.`
-      : "Rewrite the message.";
-
-    console.log('User message for regeneration:', userMessage); // Log the user message
-    console.log('Context for regeneration:', conversation.context); // Log the context
+      ? `Rewrite the message with the following additional information: ${additionalInfo}\nYour rewrite is separate from any previous attempts and each rewrite has no impact or relation to the previous ones.`
+      : 'Rewrite the message.';
 
     try {
       const response = await continueThread(
@@ -61,24 +74,19 @@ export default function Preview() {
         conversation.personalityName,
         conversation.threadId
       );
-      
-      console.log('Response from continueThread:', response); // Log the response
 
-      // Update the conversation with the new response
       const updatedConversation: Conversation = {
         ...conversation,
         lastMessage: response.assistantResponse,
         threadId: response.threadId, // Update the threadId in case it changed
       };
-      
-      console.log('Updated conversation:', updatedConversation); // Log the updated conversation
 
       await updateConversation(updatedConversation);
       setConversation(updatedConversation);
       setCustomModifications('');
     } catch (error) {
       console.error('Failed to regenerate response:', error);
-      Alert.alert('Error', 'Failed to regenerate response. Please try again.');
+      Alert.alert('Error', 'Failed to regenerate response. Please check your internet connection or ensure that this personality has not been deleted.');
     } finally {
       setIsRegenerating(false);
     }
@@ -88,48 +96,90 @@ export default function Preview() {
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <Text style={styles.title}>Response</Text>
-            <View style={styles.contentContainer}>
-              <ScrollView style={[styles.responseBox, globalStyles.shadow]}>
-                {conversation ? (
-                  <Text style={styles.responseText}>{conversation.lastMessage}</Text>
-                ) : (
-                  <Text style={styles.placeholderText}>No response available</Text>
-                )}
-              </ScrollView>
-              <Button
-                title="Copy to Clipboard"
-                onPress={handleCopyToClipboard}
-                buttonStyle={[styles.button, globalStyles.shadow]}
-                titleStyle={styles.buttonText}
-                disabled={!conversation}
-              />
-              <TextInput
-                style={[styles.input, globalStyles.shadow]}
-                placeholder="Custom modifications here"
-                placeholderTextColor={colors.textSecondary}
-                value={customModifications}
-                onChangeText={setCustomModifications}
-                multiline
-              />
-              <Button
-                title={isRegenerating ? "Regenerating..." : "Regenerate"}
-                onPress={handleRegenerate}
-                buttonStyle={[styles.button, globalStyles.shadow, styles.regenerateButton]}
-                titleStyle={styles.buttonText}
-                disabled={isRegenerating || !conversation}
-              />
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoidingView}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={styles.headerButton}
+                accessibilityLabel="Go back"
+              >
+                <Ionicons name="arrow-back" size={24} color={colors.white} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Response Preview</Text>
+              <View style={{ width: 40 }} />
             </View>
-          </ScrollView>
-          <View style={styles.bottomContainer}>
-            <Button
-              title="Go Back Home"
-              onPress={() => router.push('/Home')}
-              buttonStyle={[styles.button, globalStyles.shadow, styles.homeButton]}
-              titleStyle={styles.buttonText}
-            />
-          </View>
+
+            {/* Content */}
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+              <View style={styles.contentContainer}>
+                {/* Response Box */}
+                <View style={[styles.responseBox, globalStyles.shadow]}>
+                  <ScrollView>
+                    {conversation && conversation.lastMessage ? (
+                      <Text style={styles.responseText}>{conversation.lastMessage}</Text>
+                    ) : (
+                      <Text style={styles.placeholderText}>No response available</Text>
+                    )}
+                  </ScrollView>
+                </View>
+
+                {/* Buttons */}
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.copyButton]}
+                    onPress={handleCopyToClipboard}
+                    activeOpacity={0.7}
+                    accessibilityLabel="Copy to clipboard"
+                  >
+                    <Ionicons name="copy-outline" size={20} color={colors.primary} />
+                    <Text style={styles.buttonText}>Copy</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.button, styles.homeButton]}
+                    onPress={() => router.push('/Home')}
+                    activeOpacity={0.7}
+                    accessibilityLabel="Go back home"
+                  >
+                    <Ionicons name="home-outline" size={20} color={colors.primary} />
+                    <Text style={styles.buttonText}>Home</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Custom Modifications Input */}
+                <TextInput
+                  style={[styles.input, globalStyles.shadow]}
+                  placeholder="Add custom modifications..."
+                  placeholderTextColor={colors.textSecondary}
+                  value={customModifications}
+                  onChangeText={setCustomModifications}
+                  multiline
+                />
+
+                {/* Regenerate Button */}
+                <TouchableOpacity
+                  style={[styles.regenerateButton, globalStyles.shadow]}
+                  onPress={handleRegenerate}
+                  activeOpacity={0.7}
+                  disabled={!!(isRegenerating || !conversation)}
+                  accessibilityLabel="Regenerate response"
+                >
+                  {isRegenerating ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Ionicons name="refresh-outline" size={24} color={colors.white} />
+                      <Text style={styles.regenerateButtonText}>Regenerate</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -145,48 +195,51 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    justifyContent: 'space-between', // This will push the bottom container to the bottom
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.m,
+    paddingTop: spacing.m,
+    paddingBottom: spacing.s,
+    backgroundColor: 'transparent',
+  },
+  headerButton: {
+    padding: spacing.s,
+  },
+  headerTitle: {
+    ...typography.h2Bold,
+    color: colors.white,
+    flex: 1,
+    textAlign: 'center',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'flex-start',
+    paddingHorizontal: spacing.m,
+    paddingBottom: spacing.l,
     alignItems: 'center',
-    padding: spacing.m,
-    paddingBottom: spacing.xl * 2, // Add extra padding at the bottom for the button
-  },
-  title: {
-    ...typography.h1,
-    color: colors.white,
-    marginBottom: spacing.m,
-    marginTop: spacing.xl,
   },
   contentContainer: {
     width: '100%',
-    maxWidth: 400, // Limit the maximum width for larger screens
+    maxWidth: 600,
     alignItems: 'center',
   },
   responseBox: {
     backgroundColor: colors.white,
-    borderRadius: 15, // Slightly larger border radius
+    borderRadius: 20,
     padding: spacing.m,
     marginBottom: spacing.l,
     width: '100%',
-    maxHeight: 300, // Set a max height and allow scrolling
-    borderWidth: 5, // Add a subtle border
-    borderColor: 'rgba(0, 0, 0, 1)', // Very light black for the border
-    // More pronounced shadow
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.30,
-    shadowRadius: 4.65,
-    elevation: 8,
+    maxHeight: 300,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   responseText: {
     ...typography.body,
-    color: colors.black, // Changed to black
+    color: colors.textDark,
     textAlign: 'left',
   },
   placeholderText: {
@@ -195,47 +248,56 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
   },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: spacing.m,
+  },
   button: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: 10,
-    paddingHorizontal: spacing.m,
     paddingVertical: spacing.s,
-    marginBottom: spacing.m,
-    width: 345, // Make buttons full width
-    // Lighter shadow for buttons
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
+    paddingHorizontal: spacing.l,
+    flex: 1,
+    marginHorizontal: spacing.s,
+    justifyContent: 'center',
   },
   buttonText: {
     ...typography.button,
-    color: colors.secondary,
+    color: colors.primary,
+    marginLeft: spacing.xs,
   },
-  regenerateButton: {
-    backgroundColor: colors.accent,
-    height: 60, // Increased height for the regenerate button
-    justifyContent: 'center', // Center the text vertically
-  },
+  copyButton: {},
+  homeButton: {},
   input: {
     backgroundColor: colors.white,
     borderRadius: 10,
     padding: spacing.m,
     marginBottom: spacing.m,
-    width: '100%', // Make input full width
-    ...typography.body,
-    color: colors.black, // Changed to black
-  },
-  bottomContainer: {
     width: '100%',
-    padding: spacing.m,
-    backgroundColor: 'transparent',
+    ...typography.body,
+    color: colors.textDark,
   },
-  homeButton: {
-    marginTop: 0, // Remove top margin
+  regenerateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: spacing.m,
+    paddingHorizontal: spacing.l,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  regenerateButtonText: {
+    ...typography.button,
+    color: colors.white,
+    marginLeft: spacing.s,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

@@ -1,17 +1,37 @@
-// Step 1
+// stepOne.tsx
+
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Icon } from '@rneui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, typography, spacing, gradientColors } from '../constants/styles';
+import {
+  colors,
+  typography,
+  spacing,
+  gradientColors,
+  globalStyles,
+} from '../constants/styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUpload } from './ManageUploadContext';
+import TextBox from '../components/TextBox';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function StepOne() {
   const router = useRouter();
-  const { contextUploaded, setContextUploaded, contextMessage, setContextMessage } = useUpload();
+  const { setContextUploaded, contextMessage, setContextMessage } = useUpload();
   const [message, setMessage] = useState(contextMessage);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     setContextMessage(message);
@@ -22,60 +42,98 @@ export default function StepOne() {
       setContextMessage(message.trim());
       setContextUploaded(true);
       router.push('/stepTwo');
-    } else if (contextUploaded) {
-      // If a screenshot was uploaded, allow proceeding to next step
-      router.push('/stepTwo');
     } else {
-      Alert.alert('Input Required', 'Please enter a message or upload a screenshot.');
+      Alert.alert('Input Required', 'Please enter a message to proceed.');
     }
   };
 
-  const handleUploadScreenshot = () => {
-    // Simulate screenshot upload
-    setContextUploaded(true);
-    Alert.alert('Success', 'Screenshot uploaded successfully!');
+  const wordCount = () => {
+    return message.trim().split(/\s+/).filter(Boolean).length;
+  };
+
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
-          <View style={styles.header}>
-            <Button
-              icon={<Icon name="arrow-left" type="feather" size={24} color={colors.white} />}
-              type="clear"
-              onPress={() => router.back()}
-              buttonStyle={styles.backButton}
-            />
-            <Text style={styles.headerTitle}>Upload Context</Text>
-            <View style={{ width: 40 }} />
-          </View>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoidingView}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={() => router.push('/Home')}
+                style={styles.headerButton}
+                accessibilityLabel="Go back home"
+              >
+                <Ionicons name="arrow-back" size={24} color={colors.white} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Step One</Text>
+              <View style={{ width: 40 }} />
+            </View>
 
-          <View style={styles.content}>
-            <Text style={styles.inputTitle}>Input Message Below</Text>
-            <TextInput
-              style={[styles.textInput, styles.placeholderStyle]}
-              multiline
-              placeholder="Paste the message here!..."
-              placeholderTextColor={colors.black}
-              value={message}
-              onChangeText={setMessage}
-            />
-            <Text style={styles.orText}>Or, upload a screenshot:</Text>
-            <TouchableOpacity style={styles.uploadButton} onPress={handleUploadScreenshot}>
-              <Icon name="upload" type="feather" size={24} color={colors.secondary} />
-              <Text style={styles.uploadButtonText}>Upload Screenshot</Text>
-            </TouchableOpacity>
-            {contextUploaded && (
-              <Text style={styles.uploadedText}>Context uploaded successfully!</Text>
-            )}
-          </View>
+            {/* Content */}
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+              <Text style={styles.subtitle}>
+                Provide the message that you need to create a response for.
+              </Text>
 
-          <View style={styles.bottomContainer}>
-            <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.content}>
+                <TextBox
+                  value={message}
+                  onChangeText={setMessage}
+                  placeholder="Type or paste your message here..."
+                  wordCount={wordCount()}
+                />
+                <TouchableOpacity style={styles.helpContainer} onPress={openModal}>
+                  <Ionicons name="help-circle-outline" size={20} color={colors.white} />
+                  <Text style={styles.helpText}>What do I do?</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+
+            {/* Complete Step One Button */}
+            <View style={styles.bottomContainer}>
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={handleDone}
+                activeOpacity={0.7}
+              >
+                <View style={styles.buttonContent}>
+                  <Text style={styles.doneButtonText}>Complete Step One</Text>
+                  <Ionicons name="arrow-forward" size={24} color={colors.white} />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Modal */}
+            {isModalVisible ? (
+              <Modal
+                visible={isModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={closeModal}
+              >
+                <TouchableWithoutFeedback onPress={closeModal}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <Text style={styles.modalText}>
+                        This is where you provide the message you received that you need help responding to.
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+            ) : null}
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -92,79 +150,92 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.m,
     paddingTop: spacing.m,
     paddingBottom: spacing.s,
+    backgroundColor: 'transparent',
   },
-  backButton: {
-    padding: 0,
+  headerButton: {
+    padding: spacing.s,
   },
   headerTitle: {
-    ...typography.h2,
+    ...typography.h2Bold,
     color: colors.white,
-    flexShrink: 1,
-  },
-  content: {
     flex: 1,
-    paddingHorizontal: spacing.m,
-    paddingTop: spacing.l,
+    textAlign: 'center',
   },
-  inputTitle: {
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.m,
+    paddingBottom: spacing.l,
+    alignItems: 'center',
+  },
+  subtitle: {
     ...typography.h3,
     color: colors.white,
-    marginBottom: spacing.s,
-  },
-  textInput: {
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: spacing.m,
-    minHeight: 150,
-    ...typography.body,
-    color: colors.secondary,
+    textAlign: 'center',
     marginBottom: spacing.l,
   },
-  placeholderStyle: {
-    fontStyle: 'italic',
+  content: {
+    width: '100%',
+    maxWidth: 600,
+    alignItems: 'center',
   },
-  orText: {
-    ...typography.body,
-    color: colors.white,
-    marginBottom: spacing.m,
-  },
-  uploadButton: {
+  helpContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: spacing.m,
-    marginBottom: spacing.m,
-  },
-  uploadButtonText: {
-    ...typography.button,
-    color: colors.secondary,
-    marginLeft: spacing.s,
-  },
-  uploadedText: {
-    ...typography.body,
-    color: colors.white,
     marginTop: spacing.s,
+    opacity: 0.8,
+  },
+  helpText: {
+    color: colors.white,
+    marginLeft: spacing.xs,
   },
   bottomContainer: {
-    padding: spacing.m,
+    paddingHorizontal: spacing.m,
     paddingBottom: spacing.l,
+    backgroundColor: 'transparent',
   },
   doneButton: {
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: spacing.m,
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: spacing.m,
+    paddingHorizontal: spacing.l,
+    justifyContent: 'center',
   },
   doneButtonText: {
     ...typography.button,
-    color: colors.secondary,
+    color: colors.white,
+    marginRight: spacing.s,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 15,
+    padding: spacing.l,
+    marginHorizontal: spacing.l,
+    alignItems: 'center',
+  },
+  modalText: {
+    ...typography.body,
+    color: colors.textDark,
+    textAlign: 'center',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

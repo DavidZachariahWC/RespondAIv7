@@ -26,6 +26,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "./AuthContext";
 import { useUpload } from "./ManageUploadContext"; // Import the context hook
+import TextBox from "../components/TextBox"; // Import the new TextBox component
+import { FadeTransition } from '../components/FadeTransition';
 
 export default function Home() {
   const router = useRouter();
@@ -34,106 +36,44 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Define Animated Values for each animatable element
-  const headerOpacity = useRef(new Animated.Value(0)).current;
-  const headerTranslateY = useRef(new Animated.Value(20)).current;
-
+  // Animated Values
+  const titleOpacity = useRef(new Animated.Value(0)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
-  const subtitleTranslateY = useRef(new Animated.Value(20)).current;
-
-  const textBoxOpacity = useRef(new Animated.Value(0)).current;
-  const textBoxTranslateY = useRef(new Animated.Value(20)).current;
-
-  const generateButtonOpacity = useRef(new Animated.Value(0)).current;
-  const generateButtonTranslateY = useRef(new Animated.Value(20)).current;
-
+  const contentOpacity = useRef(new Animated.Value(0)).current;
   const bottomIconsOpacity = useRef(new Animated.Value(0)).current;
-  const bottomIconsTranslateY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    const slowAnimationDuration = 250; // For title and subtitle
-    const fastAnimationDuration = 175; // For text box and button
+    const titleDuration = 500; // Title animation duration
+    const otherElementsDuration = 333; // Duration for subtitle, content, and icons
+    const delay = 100; // Short delay between title and other elements
 
-    // Sequence animations: Header -> Subtitle -> TextBox -> GenerateButton -> BottomIcons
     Animated.sequence([
-      // Header Animation
-      Animated.parallel([
-        Animated.timing(headerOpacity, {
-          toValue: 1,
-          duration: slowAnimationDuration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headerTranslateY, {
-          toValue: 0,
-          duration: slowAnimationDuration,
-          useNativeDriver: true,
-        }),
-      ]),
-      // Subtitle Animation
+      // Title Animation
+      Animated.timing(titleOpacity, {
+        toValue: 1,
+        duration: titleDuration,
+        useNativeDriver: true,
+      }),
+      // Subtitle, Content, and Bottom Icons Animations in Parallel
       Animated.parallel([
         Animated.timing(subtitleOpacity, {
           toValue: 1,
-          duration: slowAnimationDuration,
+          duration: otherElementsDuration,
           useNativeDriver: true,
         }),
-        Animated.timing(subtitleTranslateY, {
-          toValue: 0,
-          duration: slowAnimationDuration,
-          useNativeDriver: true,
-        }),
-      ]),
-      // TextBox Animation
-      Animated.parallel([
-        Animated.timing(textBoxOpacity, {
+        Animated.timing(contentOpacity, {
           toValue: 1,
-          duration: fastAnimationDuration,
+          duration: otherElementsDuration,
           useNativeDriver: true,
         }),
-        Animated.timing(textBoxTranslateY, {
-          toValue: 0,
-          duration: fastAnimationDuration,
-          useNativeDriver: true,
-        }),
-      ]),
-      // Generate Button Animation
-      Animated.parallel([
-        Animated.timing(generateButtonOpacity, {
-          toValue: 1,
-          duration: fastAnimationDuration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(generateButtonTranslateY, {
-          toValue: 0,
-          duration: fastAnimationDuration,
-          useNativeDriver: true,
-        }),
-      ]),
-      // Bottom Icons Animation
-      Animated.parallel([
         Animated.timing(bottomIconsOpacity, {
           toValue: 0.4,
-          duration: fastAnimationDuration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bottomIconsTranslateY, {
-          toValue: 0,
-          duration: fastAnimationDuration,
+          duration: otherElementsDuration,
           useNativeDriver: true,
         }),
       ]),
     ]).start();
-  }, [
-    headerOpacity,
-    headerTranslateY,
-    subtitleOpacity,
-    subtitleTranslateY,
-    textBoxOpacity,
-    textBoxTranslateY,
-    generateButtonOpacity,
-    generateButtonTranslateY,
-    bottomIconsOpacity,
-    bottomIconsTranslateY,
-  ]);
+  }, [titleOpacity, subtitleOpacity, contentOpacity, bottomIconsOpacity]);
 
   const wordCount = useCallback(() => {
     return message.trim().split(/\s+/).filter(Boolean).length;
@@ -146,30 +86,18 @@ export default function Home() {
     }
 
     // Start fade-out animation for text and icons
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(headerOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(subtitleOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(textBoxOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(generateButtonOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.timing(bottomIconsOpacity, {
+    Animated.parallel([
+      Animated.timing(titleOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(subtitleOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentOpacity, {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
@@ -178,7 +106,7 @@ export default function Home() {
       // Set the context with the entered message
       setContextMessage(message.trim());
       setContextUploaded(true);
-      // After animation completes, navigate to StepOne
+      // After animation completes, navigate to StepTwo
       router.push("/stepTwo");
     });
   };
@@ -202,95 +130,44 @@ export default function Home() {
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {/* Animated View for Header Text */}
-            <Animated.View
-              style={[
-                styles.header,
-                {
-                  opacity: headerOpacity,
-                  transform: [{ translateY: headerTranslateY }],
-                },
-              ]}
-            >
+            <Animated.View style={[styles.header, { opacity: titleOpacity }]}>
               <Text style={styles.welcomeText}>
                 Welcome, {userObject?.name ? getFirstName(userObject.name) : "User"}.
               </Text>
             </Animated.View>
 
             {/* Animated View for Subtitle */}
-            <Animated.View
-              style={[
-                styles.subtitleContainer,
-                {
-                  opacity: subtitleOpacity,
-                  transform: [{ translateY: subtitleTranslateY }],
-                },
-              ]}
-            >
+            <Animated.View style={[styles.subtitleContainer, { opacity: subtitleOpacity }]}>
               <Text style={styles.subtitle}>
                 First, provide the message you received
               </Text>
             </Animated.View>
 
-            {/* Animated View for Text Box */}
-            <Animated.View
-              style={[
-                styles.textBoxContainer,
-                {
-                  opacity: textBoxOpacity,
-                  transform: [{ translateY: textBoxTranslateY }],
-                },
-              ]}
-            >
-              <TextInput
-                style={[styles.textBox]}
-                multiline
-                placeholder="Type or paste your message here..."
+            {/* Animated View for the rest of the content */}
+            <Animated.View style={{ opacity: contentOpacity }}>
+              <TextBox
                 value={message}
                 onChangeText={setMessage}
+                placeholder="Type or paste your message here..."
+                wordCount={wordCount()}
               />
-              <Text style={styles.wordCount}>{wordCount()}</Text>
-            </Animated.View>
 
-            {/* Animated View for Generate Button */}
-            <Animated.View
-              style={[
-                styles.generateButtonContainer,
-                {
-                  opacity: generateButtonOpacity,
-                  transform: [{ translateY: generateButtonTranslateY }],
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={[
-                  styles.generateButton,
-                  message.trim() !== "" ? styles.generateButtonActive : null,
-                ]}
-                onPress={handleGenerateResponse}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.generateButtonText,
-                    message.trim() !== "" ? styles.generateButtonTextActive : null,
-                  ]}
+              <View style={styles.generateButtonContainer}>
+                <TouchableOpacity
+                  style={styles.generateButton}
+                  onPress={handleGenerateResponse}
+                  activeOpacity={0.7}
                 >
-                  Generate Response
-                </Text>
-              </TouchableOpacity>
+                  <Text style={styles.generateButtonText}>
+                    Generate Response
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </Animated.View>
           </ScrollView>
 
           {/* Animated View for Bottom Icons */}
-          <Animated.View
-            style={[
-              styles.bottomIcons,
-              {
-                opacity: bottomIconsOpacity,
-                transform: [{ translateY: bottomIconsTranslateY }],
-              },
-            ]}
-          >
+          <Animated.View style={[styles.bottomIcons, { opacity: bottomIconsOpacity }]}>
             <TouchableOpacity onPress={() => router.push("/Settings")}>
               <Ionicons name="settings-outline" size={24} color={colors.white} />
             </TouchableOpacity>
@@ -313,7 +190,7 @@ export default function Home() {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                   <Text style={styles.modalText}>
-                    This is a placeholder for help content.
+                    {"In this step, please enter the message you've received and need assistance responding to.\n\nThis could be an email, text message, or any form of communication that you're unsure how to reply to.\n\nExamples:\n\nHey, are you available to join the project meeting tomorrow at 10 AM?\n\nCan you cover my shift this weekend?"}
                   </Text>
                 </View>
               </View>
@@ -365,50 +242,15 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl + 20,
     paddingTop: spacing.m,
   },
-  textBoxContainer: {
-    width: "90%", // Reduced from 100% to 90%
-    alignSelf: "center", // Center the container
-    marginTop: spacing.s,
-    marginBottom: spacing.m,
-    position: "relative",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 12,
-    borderRadius: 10,
-    backgroundColor: colors.white,
-    borderColor: "black",
-    borderWidth: 1,
-  },
-  textBox: {
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: spacing.m,
-    minHeight: 100,
-    maxHeight: 200,
-    ...typography.body,
-    color: colors.textDark,
-  },
-  wordCount: {
-    position: "absolute",
-    bottom: 5,
-    right: 10,
-    ...typography.caption,
-    color: colors.textLight,
-  },
   generateButtonContainer: {
     width: "100%",
     alignItems: "center",
   },
   generateButton: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.white, // Changed to white
     borderRadius: 10,
     padding: spacing.m,
-    width: "90%", // Reduced from 100% to 90%
+    width: "90%",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -422,24 +264,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     transform: [{ translateY: 2 }],
   },
-  generateButtonActive: {
-    backgroundColor: colors.primary,
-  },
   generateButtonText: {
     ...typography.button,
-    color: colors.primary,
+    color: colors.primary, // Changed to primary color for contrast
     fontWeight: "bold",
-  },
-  generateButtonTextActive: {
-    color: colors.white,
   },
   bottomIcons: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: spacing.l,
     paddingBottom: spacing.m,
-    // Remove the opacity property from here
-    transform: [{ translateY: 20 }], // Initial position for animation
+    marginBottom: spacing.m - 20,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   modalOverlay: {
     flex: 1,

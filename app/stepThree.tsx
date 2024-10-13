@@ -1,55 +1,36 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, FlatList, Animated, Alert } from 'react-native';
+// stepThree.tsx
+
+import React, { useState, useRef, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Icon } from '@rneui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, typography, spacing, gradientColors } from '../constants/styles';
+import {
+  colors,
+  typography,
+  spacing,
+  gradientColors,
+} from '../constants/styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from './AuthContext';
 import { useUpload } from './ManageUploadContext';
-import { sendMessage, createAndLogResponseObject } from './api/requests';
+import {
+  sendMessage,
+  createAndLogResponseObject,
+} from './api/requests';
 import { useConversations } from './useConversations';
-
-type Personality = {
-  id: number;
-  name: string;
-};
-
-// Reusable PersonalityButton Component with 'selected' prop
-const PersonalityButton = React.memo(
-  ({
-    name,
-    onPress,
-    selected,
-  }: {
-    name: string;
-    onPress: () => void;
-    selected: boolean;
-  }) => (
-    <TouchableOpacity
-      style={[
-        styles.personalityButton,
-        selected ? styles.personalityButtonSelected : null,
-      ]}
-      onPress={onPress}
-      accessibilityLabel={`Select ${name} personality`}
-    >
-      <Text
-        style={[
-          styles.personalityButtonText,
-          selected ? styles.personalityButtonTextSelected : null,
-        ]}
-      >
-        {name}
-      </Text>
-    </TouchableOpacity>
-  )
-);
+import PersonalityList from '../components/personalityList';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function StepThree() {
   const router = useRouter();
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [listHeight, setListHeight] = useState(0);
   const { userObject } = useAuth();
   const {
     contextUploaded,
@@ -65,22 +46,16 @@ export default function StepThree() {
   const { user } = useAuth();
   const { addConversation } = useConversations(user?.uid || '');
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    { useNativeDriver: false }
+  // Memoize personalitiesArray
+  const personalitiesArray = useMemo(
+    () =>
+      userObject?.personalities
+        ? Object.values(userObject.personalities).map((p) => p.personality)
+        : [],
+    [userObject]
   );
 
-  const personalitiesArray = userObject?.personalities
-    ? Object.values(userObject.personalities).map((p) => p.personality)
-    : [];
-  const indicatorSize = listHeight / (personalitiesArray.length || 1);
-  const indicatorTranslate = scrollY.interpolate({
-    inputRange: [0, listHeight],
-    outputRange: [0, listHeight - indicatorSize],
-    extrapolate: 'clamp',
-  });
-
-  // Handle personality selection
+  // Memoize handleSelectPersonality
   const handleSelectPersonality = useCallback(
     (personality: string) => {
       setPersonalityName(personality);
@@ -88,20 +63,19 @@ export default function StepThree() {
     [setPersonalityName]
   );
 
-  // Render item function for FlatList with 'selected' prop
-  const renderPersonalityButton = useCallback(
-    ({ item }: { item: string }) => (
-      <PersonalityButton
-        name={item}
-        onPress={() => handleSelectPersonality(item)}
-        selected={item === personalityName} // Pass 'selected' prop
-      />
-    ),
-    [handleSelectPersonality, personalityName]
-  );
+  // Memoize handleEditPersonality (currently empty)
+  const handleEditPersonality = useCallback(() => {
+    // Implement edit functionality if needed
+  }, []);
+
+  // Memoize handleCreatePersonality
+  const handleCreatePersonality = useCallback(() => {
+    router.push('/createPersonality');
+    console.log('Create new personality');
+  }, [router]);
 
   // Calculate progress
-  const progress = React.useMemo(() => {
+  const progress = useMemo(() => {
     return (
       (personalityName ? 33.33 : 0) +
       (contextUploaded ? 33.33 : 0) +
@@ -128,9 +102,6 @@ export default function StepThree() {
           personalityName as string
         );
         console.log('RESPONSE received:', response);
-        console.log('Context:', contextMessage);
-        console.log('Thread ID:', response.threadId);
-        console.log('Assistant Message:', response.assistantResponse);
 
         // Create and log the local response object
         const localResponseObject = await createAndLogResponseObject(
@@ -160,7 +131,10 @@ export default function StepThree() {
         // Navigate to the preview page with the response
         router.push({
           pathname: '/preview',
-          params: { response: response.assistantResponse, threadId: response.threadId },
+          params: {
+            response: response.assistantResponse,
+            threadId: response.threadId,
+          },
         });
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -191,49 +165,53 @@ export default function StepThree() {
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={styles.gradient}>
         <SafeAreaView style={styles.safeArea}>
+          {/* Header */}
           <View style={styles.header}>
-            <Button
-              icon={<Icon name="arrow-left" type="feather" size={24} color={colors.white} />}
-              type="clear"
-              onPress={() => router.back()}
-              buttonStyle={styles.backButton}
-            />
+            <TouchableOpacity
+              onPress={() => router.push('/stepTwo')}
+              style={styles.headerButton}
+              accessibilityLabel="Go back to step two"
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.white} />
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>Select Personality</Text>
             <View style={{ width: 40 }} />
           </View>
 
-          <FlatList
-            data={personalitiesArray}
-            renderItem={renderPersonalityButton}
-            keyExtractor={(item) => item}
-            contentContainerStyle={styles.listContainer}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            onLayout={(event) => setListHeight(event.nativeEvent.layout.height)}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.generateButton,
-              progress > 99 ? styles.generateButtonActive : null,
-            ]}
-            onPress={handleGenerate}
-            activeOpacity={0.7}
-            disabled={progress <= 99}
-          >
-            <Text style={styles.generateButtonText}>Generate Response</Text>
-          </TouchableOpacity>
-
-          {/* Progress Bar */}
-          <View style={styles.progressBarContainer}>
-            <Animated.View
-              style={[
-                styles.progressBar,
-                { width: `${progress}%` },
-              ]}
+          {/* Personality List */}
+          <View style={styles.listContainer}>
+            <PersonalityList
+              personalities={personalitiesArray}
+              selectedPersonality={personalityName || ''}
+              onSelectPersonality={handleSelectPersonality}
+              onEditPersonality={handleEditPersonality}
+              onCreatePersonality={handleCreatePersonality}
             />
           </View>
-          <Text style={styles.progressText}>{`${Math.round(progress)}% Complete`}</Text>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.generateButton}
+              onPress={handleGenerate}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.generateButtonText}>Generate Response</Text>
+            </TouchableOpacity>
+
+            {/* Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <Animated.View
+                style={[
+                  styles.progressBar,
+                  { width: `${progress}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {`${Math.round(progress)}% Complete`}
+            </Text>
+          </View>
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -241,6 +219,7 @@ export default function StepThree() {
 }
 
 const styles = StyleSheet.create({
+  // ... (styles adjusted for visual improvements)
   container: {
     flex: 1,
   },
@@ -249,78 +228,45 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: 0
+    paddingTop: 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.m,
     paddingTop: spacing.m,
     paddingBottom: spacing.s,
+    backgroundColor: 'transparent',
   },
-  backButton: {
-    padding: 0,
+  headerButton: {
+    padding: spacing.s,
   },
   headerTitle: {
-    ...typography.h2,
+    ...typography.h2Bold,
     color: colors.white,
-    flexShrink: 1,
+    flex: 1,
+    textAlign: 'center',
   },
   listContainer: {
     paddingHorizontal: spacing.m,
-    paddingTop: spacing.l,
+    paddingBottom: spacing.l,
+  },
+  footer: {
+    paddingHorizontal: spacing.m,
     paddingBottom: spacing.m,
   },
-  personalityButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 10,
-    padding: spacing.m,
-    marginBottom: spacing.m,
-    borderWidth: 1,
-    borderColor: 'transparent', // Default border color
-  },
-  personalityButtonSelected: {
-    backgroundColor: colors.primary, // Highlighted background
-    borderColor: colors.secondary,   // Highlighted border
-    borderWidth: 2,
-  },
-  personalityButtonText: {
-    ...typography.body,
-    color: colors.white,
-  },
-  personalityButtonTextSelected: {
-    color: colors.white,
-    fontWeight: 'bold',
-  },
   generateButton: {
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: spacing.m,
-    width: '90%',
-    alignSelf: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10, // Increased shadowOffset for deeper shadow
-    },
-    shadowOpacity: 0.6, // Increased shadowOpacity for stronger shadow
-    shadowRadius: 10, // Increased shadowRadius for more spread
-    elevation: 20, // Further increased elevation for enhanced 3D effect
-    borderColor: 'black',
-    borderWidth: 1,
-    transform: [{ translateY: 2 }], // Slight downward translation to mimic depth
-  },
-  generateButtonActive: {
     backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: spacing.m,
+    paddingHorizontal: spacing.l,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.m,
   },
   generateButtonText: {
     ...typography.button,
-    color: colors.primary,
+    color: colors.white,
     fontWeight: 'bold',
   },
   progressBarContainer: {
@@ -328,8 +274,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 4,
     overflow: 'hidden',
-    marginTop: spacing.m,
-    marginHorizontal: spacing.m,
+    marginBottom: spacing.s,
   },
   progressBar: {
     height: '100%',
@@ -340,6 +285,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ffffff',
     textAlign: 'center',
-    marginTop: spacing.s,
   },
 });
