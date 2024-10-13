@@ -5,12 +5,15 @@ type UploadContextType = {
   infoUploaded: boolean;
   contextMessage: string;
   responseInfo: string;
+  personalityName: string | null;
   setContextUploaded: (value: boolean) => void;
   setInfoUploaded: (value: boolean) => void;
   setContextMessage: (value: string) => void;
   setResponseInfo: (value: string) => void;
+  setPersonalityName: (value: string | null) => void;
   clearContext: () => void;
   clearResponseInfo: () => void;
+  clearPersonality: () => void;
 };
 
 const UploadContext = createContext<UploadContextType | undefined>(undefined);
@@ -20,6 +23,7 @@ export const UploadProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [infoUploaded, setInfoUploaded] = useState(false);
   const [contextMessage, setContextMessage] = useState('');
   const [responseInfo, setResponseInfo] = useState('');
+  const [personalityName, setPersonalityName] = useState<string | null>(null);
 
   const clearContext = useCallback(() => {
     setContextUploaded(false);
@@ -31,17 +35,24 @@ export const UploadProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setResponseInfo('');
   }, []);
 
+  const clearPersonality = useCallback(() => {
+    setPersonalityName(null);
+  }, []);
+
   const value = {
     contextUploaded,
     infoUploaded,
     contextMessage,
     responseInfo,
+    personalityName,
     setContextUploaded,
     setInfoUploaded,
     setContextMessage,
     setResponseInfo,
+    setPersonalityName,
     clearContext,
-    clearResponseInfo
+    clearResponseInfo,
+    clearPersonality,
   };
 
   return (

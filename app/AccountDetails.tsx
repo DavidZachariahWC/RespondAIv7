@@ -1,46 +1,51 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, StatusBar, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { Stack } from "expo-router";
-import { LinearGradient } from 'expo-linear-gradient';
-import { globalStyles, gradientColors, colors, typography, spacing } from "../constants/styles";
-import { Button } from '@rneui/themed';
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  globalStyles,
+  gradientColors,
+  colors,
+  typography,
+  spacing,
+} from "../constants/styles";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useAuth } from './AuthContext';
-import { updateUserName } from './api/requests';
+import { useAuth } from "./AuthContext";
+import { updateUserName } from "./api/requests";
 
 export default function AccountDetails() {
   const router = useRouter();
   const { userObject, setUserObject, user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(userObject?.name || '');
+  const [newName, setNewName] = useState(userObject?.name || "");
 
   const handleEditName = () => {
-    console.log('Editing name started');
     setIsEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    console.log('Name edit cancelled');
-    setNewName(userObject?.name || '');
-    setIsEditing(false);
   };
 
   const handleSaveName = async () => {
     if (!user || !userObject) return;
 
     try {
-      console.log('Attempting to save new name:', newName);
       const updatedUserData = await updateUserName(user.uid, newName);
       setUserObject({
         name: updatedUserData.name,
-        personalities: updatedUserData.personalities
+        personalities: updatedUserData.personalities,
       });
       setIsEditing(false);
-      console.log('Name updated successfully');
     } catch (error) {
-      console.error('Failed to update name:', error);
-      // Here you might want to show an error message to the user
+      console.error("Failed to update name:", error);
+      // Show error message to the user
     }
   };
 
@@ -48,47 +53,72 @@ export default function AccountDetails() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          barStyle="light-content"
+        />
         <LinearGradient
           colors={gradientColors}
           style={globalStyles.gradientBackground}
         >
           <SafeAreaView style={styles.safeArea}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
+              {/* Header */}
               <View style={styles.header}>
-                <Button
-                  icon={<Ionicons name="arrow-back" size={24} color={colors.white} />}
-                  type="clear"
-                  onPress={() => router.push("/Settings" as any)}
-                />
+                <TouchableOpacity
+                  onPress={() => router.push("/Settings")}
+                  style={styles.iconButton}
+                >
+                  <Ionicons name="arrow-back" size={24} color={colors.white} />
+                </TouchableOpacity>
                 <Text style={styles.title}>Account Details</Text>
                 <View style={{ width: 40 }} />
               </View>
-              
+
+              {/* Name Box at the Top */}
               <View style={styles.content}>
-                <Text style={styles.label}>Name:</Text>
-                {isEditing ? (
-                  <View style={styles.editContainer}>
-                    <TextInput
-                      style={styles.nameInput}
-                      value={newName}
-                      onChangeText={setNewName}
-                      autoFocus
-                    />
-                    <TouchableOpacity onPress={handleSaveName} style={styles.iconButton}>
-                      <Ionicons name="checkmark" size={24} color={colors.white} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleCancelEdit} style={styles.iconButton}>
-                      <Ionicons name="close" size={24} color={colors.white} />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity onPress={handleEditName} style={styles.nameContainer}>
-                    <Text style={styles.name}>{userObject?.name || 'Not available'}</Text>
-                    <Ionicons name="create-outline" size={24} color={colors.white} />
-                  </TouchableOpacity>
-                )}
-                <Text style={styles.description}>This is where account information and settings will be displayed.</Text>
+                <TouchableOpacity
+                  style={styles.nameButton}
+                  onPress={isEditing ? undefined : handleEditName}
+                  activeOpacity={isEditing ? 1 : 0.7}
+                >
+                  {isEditing ? (
+                    <>
+                      <TextInput
+                        style={[styles.nameInput, styles.nameInputEditing]}
+                        value={newName}
+                        onChangeText={setNewName}
+                        placeholder="Enter your name"
+                        placeholderTextColor={colors.primary}
+                        underlineColorAndroid="transparent"
+                        autoFocus
+                      />
+                      <TouchableOpacity
+                        onPress={handleSaveName}
+                        style={styles.iconButton}
+                      >
+                        <Ionicons
+                          name="checkmark-outline"
+                          size={24}
+                          color={colors.primary}
+                        />
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.name}>
+                        {userObject?.name || "Not available"}
+                      </Text>
+                      <Ionicons
+                        name="create-outline"
+                        size={24}
+                        color={colors.primary}
+                        style={styles.editIcon}
+                      />
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             </ScrollView>
           </SafeAreaView>
@@ -109,9 +139,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: spacing.l,
     paddingHorizontal: spacing.l,
     paddingBottom: spacing.m,
@@ -121,45 +151,40 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     paddingHorizontal: spacing.l,
+    paddingTop: spacing.m,
   },
-  label: {
-    ...typography.body,
-    color: colors.white,
-    marginBottom: spacing.s,
+  nameButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.white,
+    borderRadius: 15,
+    paddingVertical: spacing.m,
+    paddingHorizontal: spacing.l,
+    width: "100%",
+    marginBottom: spacing.m,
   },
   name: {
     ...typography.h2,
-    color: colors.white,
-    marginBottom: spacing.m,
-  },
-  description: {
-    ...typography.body,
-    color: colors.white,
-    textAlign: 'center',
-  },
-  nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.m,
-  },
-  editContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.m,
+    color: colors.primary,
+    flex: 1,
   },
   nameInput: {
     ...typography.h2,
-    color: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.white,
-    paddingVertical: spacing.m,
+    color: colors.primary,
     flex: 1,
+  },
+  nameInputEditing: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
   },
   iconButton: {
     padding: spacing.s,
+  },
+  editIcon: {
+    marginLeft: spacing.m,
   },
 });

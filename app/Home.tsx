@@ -1,106 +1,201 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, Platform, ScrollView, Alert } from "react-native";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Platform,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  Animated,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, typography, spacing, globalStyles, gradientColors } from "../constants/styles";
-import { Button } from '@rneui/themed';
-import { LinearGradient } from 'expo-linear-gradient';
-import { AppRoutes } from '../types/routes';
-import { getAuth, signOut } from "firebase/auth";
-import { useConversations } from './useConversations';
-import ConversationCard from '../components/conversationCard';
-import { useAuth } from './AuthContext';
+import {
+  colors,
+  typography,
+  spacing,
+  globalStyles,
+  gradientColors,
+} from "../constants/styles";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAuth } from "./AuthContext";
+import { useUpload } from "./ManageUploadContext"; // Import the context hook
+import TextBox from "../components/TextBox"; // Import the new TextBox component
+import { FadeTransition } from '../components/FadeTransition';
 
 export default function Home() {
   const router = useRouter();
-  const auth = getAuth();
-  const { user } = useAuth();
-  const { conversations, deleteConversation } = useConversations(user?.uid || null);
+  const { userObject } = useAuth();
+  const { setContextUploaded, setContextMessage } = useUpload(); // Destructure necessary functions
+  const [message, setMessage] = useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      console.log('User signed out successfully');
-      // Router will automatically redirect to SignIn page due to auth state change
-    } catch (error) {
-      console.error('Sign out error', error);
-      Alert.alert('Sign Out Error', 'An error occurred while signing out. Please try again.');
+  // Animated Values
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const subtitleOpacity = useRef(new Animated.Value(0)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const bottomIconsOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const titleDuration = 500; // Title animation duration
+    const otherElementsDuration = 333; // Duration for subtitle, content, and icons
+    const delay = 100; // Short delay between title and other elements
+
+    Animated.sequence([
+      // Title Animation
+      Animated.timing(titleOpacity, {
+        toValue: 1,
+        duration: titleDuration,
+        useNativeDriver: true,
+      }),
+      // Subtitle, Content, and Bottom Icons Animations in Parallel
+      Animated.parallel([
+        Animated.timing(subtitleOpacity, {
+          toValue: 1,
+          duration: otherElementsDuration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: otherElementsDuration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomIconsOpacity, {
+          toValue: 0.4,
+          duration: otherElementsDuration,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [titleOpacity, subtitleOpacity, contentOpacity, bottomIconsOpacity]);
+
+  const wordCount = useCallback(() => {
+    return message.trim().split(/\s+/).filter(Boolean).length;
+  }, [message]);
+
+  const handleGenerateResponse = () => {
+    if (message.trim() === "") {
+      Alert.alert("Input Required", "Please enter a message to generate a response.");
+      return;
     }
+
+    // Start fade-out animation for text and icons
+    Animated.parallel([
+      Animated.timing(titleOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(subtitleOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Set the context with the entered message
+      setContextMessage(message.trim());
+      setContextUploaded(true);
+      // After animation completes, navigate to StepTwo
+      router.push("/stepTwo");
+    });
   };
 
-  const handleDeleteConversation = (threadId: string) => {
-    Alert.alert(
-      "Delete Conversation",
-      "Are you sure you want to delete this conversation?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        { 
-          text: "Delete", 
-          onPress: () => {
-            deleteConversation(threadId);
-            // The list will automatically update due to state change in useConversations
-          },
-          style: "destructive"
-        }
-      ]
-    );
+  const getFirstName = (fullName: string) => {
+    return fullName.split(" ")[0];
+  };
+
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      <LinearGradient
-        colors={gradientColors}
-        style={globalStyles.gradientBackground}
-      >
+      <LinearGradient colors={gradientColors} style={globalStyles.gradientBackground}>
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.header}>
-              <Text style={styles.title}>RespondAI</Text>
-              <Button
-                icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
-                type="clear"
-                onPress={() => router.push("/Settings" as any)}
+            {/* Animated View for Header Text */}
+            <Animated.View style={[styles.header, { opacity: titleOpacity }]}>
+              <Text style={styles.welcomeText}>
+                Welcome, {userObject?.name ? getFirstName(userObject.name) : "User"}.
+              </Text>
+            </Animated.View>
+
+            {/* Animated View for Subtitle */}
+            <Animated.View style={[styles.subtitleContainer, { opacity: subtitleOpacity }]}>
+              <Text style={styles.subtitle}>
+                First, provide the message you received
+              </Text>
+            </Animated.View>
+
+            {/* Animated View for the rest of the content */}
+            <Animated.View style={{ opacity: contentOpacity }}>
+              <TextBox
+                value={message}
+                onChangeText={setMessage}
+                placeholder="Type or paste your message here..."
+                wordCount={wordCount()}
               />
-            </View>
-            <View style={styles.content}>
-              <Text style={styles.subtitle}>Start a new conversation</Text>
-              <View style={styles.buttonContainer}>
-                <Button
-                  title="Respond to Message"
-                  icon={<Ionicons name="chatbubble-outline" size={24} color={colors.white} style={styles.buttonIcon} />}
-                  buttonStyle={styles.button}
-                  titleStyle={styles.buttonTitle}
-                  onPress={() => router.push("/Context" as any)}
-                />
+
+              <View style={styles.generateButtonContainer}>
+                <TouchableOpacity
+                  style={styles.generateButton}
+                  onPress={handleGenerateResponse}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.generateButtonText}>
+                    Generate Response
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            <View style={styles.historySection}>
-              <Text style={styles.historyTitle}>Recent Chats</Text>
-              {conversations.length > 0 ? (
-                conversations.map((conversation) => (
-                  <ConversationCard
-                    key={conversation.threadId}
-                    threadId={conversation.threadId}
-                    lastMessage={conversation.lastMessage}
-                    onDelete={handleDeleteConversation}
-                  />
-                ))
-              ) : (
-                <Text style={styles.noConversationsText}>No recent conversations</Text>
-              )}
-            </View>
-            <Button
-              title="Sign Out"
-              onPress={handleSignOut}
-              buttonStyle={styles.signOutButton}
-              titleStyle={styles.signOutButtonTitle}
-              icon={<Ionicons name="log-out-outline" size={24} color={colors.white} style={styles.signOutButtonIcon} />}
-            />
+            </Animated.View>
           </ScrollView>
+
+          {/* Animated View for Bottom Icons */}
+          <Animated.View style={[styles.bottomIcons, { opacity: bottomIconsOpacity }]}>
+            <TouchableOpacity onPress={() => router.push("/Settings")}>
+              <Ionicons name="settings-outline" size={24} color={colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/RecentChats")}>
+              <Ionicons name="chatbubbles-outline" size={24} color={colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={openModal}>
+              <Ionicons name="help-circle-outline" size={24} color={colors.white} />
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Help Modal */}
+          <Modal
+            visible={isModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={closeModal}
+          >
+            <TouchableWithoutFeedback onPress={closeModal}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalText}>
+                    {"In this step, please enter the message you've received and need assistance responding to.\n\nThis could be an email, text message, or any form of communication that you're unsure how to reply to.\n\nExamples:\n\nHey, are you available to join the project meeting tomorrow at 10 AM?\n\nCan you cover my shift this weekend?"}
+                  </Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -113,128 +208,102 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: 0,
   },
   scrollContent: {
     flexGrow: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: spacing.l,
+    flexDirection: "column",
+    justifyContent: "center", // Center the welcome header
+    alignItems: "center",
+    paddingTop: spacing.xl + 50,
     paddingHorizontal: spacing.l,
-    paddingBottom: spacing.s,
+    paddingBottom: spacing.m, // Reduced padding to bring subtitle closer
   },
-  title: {
+  welcomeText: {
     ...typography.h1,
     color: colors.white,
-    fontSize: 32,
+    fontSize: 36, // Increased font size for the welcome message
+    textAlign: "center",
+    marginBottom: spacing.s, // Space below the welcome message
   },
-  content: {
-    justifyContent: "flex-start",
-    alignItems: "center",
+  subtitleContainer: {
     paddingHorizontal: spacing.l,
-    paddingTop: spacing.m,
+    paddingBottom: spacing.m,
+    alignItems: "center",
   },
   subtitle: {
     ...typography.h2,
     color: colors.white,
     marginBottom: spacing.m,
     textAlign: "center",
+    fontWeight: "normal", // Make subtitle not bold
+    paddingBottom: spacing.xl + 20,
+    paddingTop: spacing.m,
   },
-  buttonContainer: {
-    width: '100%',
-    marginTop: spacing.s,
+  generateButtonContainer: {
+    width: "100%",
+    alignItems: "center",
   },
-  button: {
-    width: '100%',
-    height: 60,
-    borderRadius: 30,
-    marginBottom: spacing.s,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
+  generateButton: {
+    backgroundColor: colors.white, // Changed to white
+    borderRadius: 10,
+    padding: spacing.m,
+    width: "90%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 20,
+    borderColor: "black",
+    borderWidth: 1,
+    transform: [{ translateY: 2 }],
   },
-  buttonIcon: {
-    marginRight: spacing.m,
-  },
-  buttonTitle: {
+  generateButtonText: {
     ...typography.button,
-    color: colors.white,
+    color: colors.primary, // Changed to primary color for contrast
+    fontWeight: "bold",
   },
-  buttonSubtext: {
-    ...typography.body,
-    color: colors.white,
-    textAlign: "center",
-    marginBottom: spacing.m,
-    opacity: 0.8,
-  },
-  historySection: {
+  bottomIcons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.l,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.l,
-  },
-  historyTitle: {
-    ...typography.h2,
-    color: colors.white,
-    marginBottom: spacing.m,
-  },
-  historyButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.m,
-    backgroundColor: colors.white,
-    borderRadius: 15,
-  },
-  historyButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 15,
-    height: 70,
-    justifyContent: 'flex-start',
-    paddingHorizontal: spacing.m,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  deleteButton: {
-    padding: spacing.s,
-    backgroundColor: 'transparent',
+    paddingBottom: spacing.m,
+    marginBottom: spacing.m - 20,
     position: 'absolute',
+    bottom: 0,
+    left: 0,
     right: 0,
-    height: '100%',
-    justifyContent: 'center',
   },
-  historyButtonTitle: {
-    ...typography.body,
-    color: colors.primary,
-    textAlign: 'left',
+  modalOverlay: {
     flex: 1,
-    marginLeft: spacing.m,
-    fontSize: 14,
-    paddingRight: 40, // Add right padding to prevent text from being covered by delete icon
+    backgroundColor: "rgba(255, 255, 255, 0.9)", // Semi-transparent white overlay
+    justifyContent: "center",
+    alignItems: "center",
   },
-  historyButtonIcon: {
-    marginRight: spacing.m,
+  modalContent: {
+    width: "80%",
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: spacing.l,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  signOutButton: {
-    marginHorizontal: spacing.l,
-    marginTop: spacing.l,
-    marginBottom: spacing.xl,
-    borderRadius: 30,
-    height: 50,
-  },
-  signOutButtonTitle: {
-    ...typography.button,
-    color: colors.white,
-  },
-  signOutButtonIcon: {
-    marginRight: spacing.s,
-  },
-  noConversationsText: {
+  modalText: {
     ...typography.body,
-    color: colors.white,
-    textAlign: 'center',
-    marginTop: spacing.m,
+    color: colors.textDark,
+    textAlign: "center",
   },
 });

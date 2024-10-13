@@ -66,7 +66,7 @@ export const sendMessage = async (
       userId,
       userMessage,
       context,
-      personalityKey
+      personalityKey // No encoding here
     });
     console.log('Message sent successfully');
     return response.data;
@@ -110,8 +110,8 @@ export const createAndLogResponseObject = async (
     conversations = [newConversation, ...conversations];
     await AsyncStorage.setItem(userSpecificKey, JSON.stringify(conversations));
 
-    // Optionally, encrypt sensitive data
-    await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(conversations));
+    // Remove this line to avoid using SecureStore for large data
+    // await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(conversations));
   } catch (error) {
     console.error('Error saving conversation:', error);
   }
@@ -131,7 +131,7 @@ export const continueThread = async (
       userId,
       userMessage,
       context,
-      personalityKey,
+      personalityKey, // No encoding here
       threadId
     });
     console.log('Thread continued successfully');
@@ -139,5 +139,117 @@ export const continueThread = async (
   } catch (error) {
     console.error('Error continuing thread:', error);
     throw new Error('Failed to continue thread. Please try again.');
+  }
+};
+
+// Add this new function to the existing requests.ts file
+
+export const fetchPersonalityDescription = async (userId: string, personalityName: string): Promise<string> => {
+  try {
+    const response = await axios.get(`http://localhost:3000/users/${userId}/personalities/${encodeURIComponent(personalityName)}`);
+    console.log('Personality description fetched successfully');
+    return response.data.description;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        if (error.response.data.error === "User not found") {
+          throw new Error('User not found');
+        } else if (error.response.data.error === "Personality not found") {
+          throw new Error('Personality not found');
+        }
+      }
+    }
+    console.error('Error fetching personality description:', error);
+    throw new Error('An error occurred while fetching the personality description');
+  }
+};
+
+export const updatePersonalityDescription = async (userId: string, personalityKey: string, newDescription: string): Promise<void> => {
+  try {
+    const response = await axios.put(
+      `http://localhost:3000/users/${userId}/personalities/${encodeURIComponent(personalityKey)}`,
+      { newDescription }
+    );
+    console.log('Personality description updated successfully');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        if (error.response.data.error === "User not found") {
+          throw new Error('User not found');
+        } else if (error.response.data.error === "Personality not found") {
+          throw new Error('Personality not found');
+        }
+      } else if (error.response?.status === 400) {
+        throw new Error('New description is required');
+      }
+    }
+    console.error('Error updating personality description:', error);
+    throw new Error('An error occurred while updating the personality description');
+  }
+};
+
+export const createPersonality = async (
+  userId: string,
+  newPersonalityName: string,
+  newPersonalityDescription: string
+): Promise<any> => {
+  try {
+    const response = await axios.post(`http://localhost:3000/users/${userId}/personalities`, {
+      newPersonalityName,
+      newPersonalityDescription,
+    });
+
+    if (response.status === 201) {
+      console.log('New personality added successfully:', response.data.message);
+      return response.data;
+    } else {
+      console.error('Unexpected response status:', response.status);
+      throw new Error('Unexpected response from the server.');
+    }
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        const { status, data } = error.response;
+        if (status === 400) {
+          throw new Error('Personality name and description are required.');
+        } else if (status === 404) {
+          throw new Error('User not found.');
+        } else if (status === 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          throw new Error(`Unexpected error: ${data.error || 'Unknown error.'}`);
+        }
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        throw new Error('No response from server. Please check your network connection.');
+      } else {
+        console.error('Error setting up request:', error.message);
+        throw new Error('Failed to create personality. Please try again.');
+      }
+    } else {
+      console.error('Unexpected error:', error);
+      throw new Error('An unexpected error occurred.');
+    }
+  }
+};
+
+export const deletePersonality = async (userId: string, personalityName: string): Promise<void> => {
+  try {
+    const response = await axios.delete(`http://localhost:3000/users/${userId}/personalities/${encodeURIComponent(personalityName)}`);
+    console.log('Personality deleted successfully');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        if (error.response.data.error === "User not found") {
+          throw new Error('User not found');
+        } else if (error.response.data.error === "Personality not found") {
+          throw new Error('Personality not found');
+        }
+      }
+    }
+    console.error('Error deleting personality:', error);
+    throw new Error('An error occurred while deleting the personality');
   }
 };

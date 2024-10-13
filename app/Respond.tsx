@@ -1,3 +1,4 @@
+// redundant and can probably be deleted
 import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, FlatList, Animated } from 'react-native';
 import { useRouter } from 'expo-router';

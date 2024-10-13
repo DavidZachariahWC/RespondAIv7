@@ -38,12 +38,18 @@ export default function Layout() {
           <Stack.Screen name="Home" options={{ animation: 'none' }} />
           <Stack.Screen name="SignIn" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="Respond" options={{ animation: 'none' }} />
-          <Stack.Screen name="CasualChat" options={{ animation: 'none' }} />
-          <Stack.Screen name="Settings" options={{ animation: 'none' }} />
-          <Stack.Screen name="Context" options={{ animation: 'none' }} />
+          <Stack.Screen name="Settings" options={{ animation: 'fade' }} />
           <Stack.Screen name="SignUp" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="generatingResponse" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="preview" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="RecentChats" options={{ animation: 'fade', headerShown: false }} />
+          <Stack.Screen name="stepOne" options={{ animation: 'slide_from_left', headerShown: false }} />
+          <Stack.Screen name="stepTwo" options={{ animation: 'fade', headerShown: false }} />
+          <Stack.Screen name="stepThree" options={{ animation: 'fade', headerShown: false }} />
+          <Stack.Screen name="AccountDetails" options={{ animation: 'fade', headerShown: false }} />
+          <Stack.Screen name="viewPersonalities" options={{ animation: 'fade', headerShown: false }} />
+          <Stack.Screen name="createPersonality" options={{ animation: 'fade', headerShown: false }} />
+          <Stack.Screen name="personalityDetails" options={{ animation: 'fade', headerShown: false }} />
         </Stack>
       </View>
       </UploadProvider>
