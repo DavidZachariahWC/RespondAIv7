@@ -46,12 +46,27 @@ const CreatePersonality: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color={colors.white} />
-      </TouchableOpacity>
+      {/* Header Section */}
+      <View style={styles.header}>
+        {/* Left Placeholder */}
+        <View style={styles.leftPlaceholder}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Title Section */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Create New Personality</Text>
+        </View>
+        
+        {/* Right Placeholder */}
+        <View style={styles.rightPlaceholder}>
+          {/* Optional: Add another button or leave empty */}
+        </View>
+      </View>
       
-      <Text style={styles.title}>Create New Personality</Text>
-      
+      {/* Form Inputs */}
       <TextInput
         style={styles.input}
         placeholder="New Personality Name"
@@ -94,18 +109,32 @@ const styles = StyleSheet.create({
     padding: spacing.l,
     backgroundColor: colors.background,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Distribute space evenly
+    marginTop: spacing.l + 15,
+    marginBottom: spacing.l,
+  },
+  leftPlaceholder: {
+    width: 50, // Allocate fixed width to match back button
+    justifyContent: 'center',
+  },
   backButton: {
-    position: 'absolute',
-    top: spacing.l,
-    left: spacing.l,
-    zIndex: 1,
+    padding: spacing.m,
+  },
+  titleContainer: {
+    flex: 1, // Take up remaining space
+    alignItems: 'center',
+    marginLeft: -spacing.m, // Shift title slightly to the left
   },
   title: {
     ...typography.h1,
     color: colors.white,
-    marginTop: spacing.xl,
-    marginBottom: spacing.l,
     textAlign: 'center',
+  },
+  rightPlaceholder: {
+    width: 50, // Same width as leftPlaceholder for symmetry
   },
   input: {
     ...typography.body,
