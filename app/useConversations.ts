@@ -39,7 +39,6 @@ export const useConversations = (userId: string | null) => {
       const updatedConversations = [newConversation, ...conversations];
       const userSpecificKey = `conversations_${userId}`;
       await AsyncStorage.setItem(userSpecificKey, JSON.stringify(updatedConversations));
-      await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error adding conversation:', error);
@@ -57,7 +56,6 @@ export const useConversations = (userId: string | null) => {
       );
       const userSpecificKey = `conversations_${userId}`;
       await AsyncStorage.setItem(userSpecificKey, JSON.stringify(updatedConversations));
-      await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error updating conversation:', error);
@@ -69,7 +67,6 @@ export const useConversations = (userId: string | null) => {
       const updatedConversations = conversations.filter(conv => conv.threadId !== threadId);
       const userSpecificKey = `conversations_${userId}`;
       await AsyncStorage.setItem(userSpecificKey, JSON.stringify(updatedConversations));
-      await SecureStore.setItemAsync(`encrypted_${userSpecificKey}`, JSON.stringify(updatedConversations));
       setConversations(updatedConversations);
     } catch (error) {
       console.error('Error deleting conversation:', error);

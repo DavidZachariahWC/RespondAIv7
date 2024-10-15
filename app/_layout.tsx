@@ -37,7 +37,6 @@ export default function Layout() {
           <Stack.Screen name="Intro" options={{ animation: 'none' }} />
           <Stack.Screen name="Home" options={{ animation: 'none' }} />
           <Stack.Screen name="SignIn" options={{ animation: 'none', headerShown: false }} />
-          <Stack.Screen name="Respond" options={{ animation: 'none' }} />
           <Stack.Screen name="Settings" options={{ animation: 'fade' }} />
           <Stack.Screen name="SignUp" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="generatingResponse" options={{ animation: 'none', headerShown: false }} />
