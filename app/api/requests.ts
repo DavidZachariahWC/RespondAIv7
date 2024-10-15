@@ -5,7 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 
 export const sendUserData = async (name: string, userId: string): Promise<any> => {
     try {
-        const response = await axios.post('http://localhost:3000/users', {
+        const response = await axios.post('https://test-firebase-dusky.vercel.app/api/users', {
           name,
           userId
         });
@@ -18,7 +18,7 @@ export const sendUserData = async (name: string, userId: string): Promise<any> =
 
 export const fetchUserData = async (userId: string): Promise<any> => {
     try {
-        const response = await axios.get(`http://localhost:3000/users/${userId}`);
+        const response = await axios.get(`https://test-firebase-dusky.vercel.app/api/users/${userId}`);
         console.log('User data successfully fetched');
         return response.data;
     } catch (error) {
@@ -29,7 +29,7 @@ export const fetchUserData = async (userId: string): Promise<any> => {
 
 export const updateUserName = async (userId: string, newName: string): Promise<any> => {
     try {
-        const response = await axios.put(`http://localhost:3000/users/${userId}`, { name: newName });
+        const response = await axios.put(`https://test-firebase-dusky.vercel.app/api/users/${userId}`, { name: newName });
         console.log('User name updated successfully:', response.data);
         return response.data;
     } catch (error) {
@@ -46,8 +46,8 @@ export const sendContextData = async (contextData: {
   userId: string;
 }): Promise<any> => {
   try {
-    const response = await axios.post('http://localhost:3000/context', contextData);
-    console.log('Context data sent successfully');
+    const response = await axios.post('https://test-firebase-dusky.vercel.app/api/context', contextData);
+    //console.log('Context data sent successfully');
     return response.data;
   } catch (error) {
     console.error('Error sending context data:', error);
@@ -62,10 +62,12 @@ export const sendMessage = async (
   personalityKey: string
 ): Promise<{ assistantResponse: string; threadId: string }> => {
   try {
-    const response = await axios.post('http://localhost:3000/sendMessage', {
+    const modifiedMessage = `message that requires a response is here: ${userMessage}`;
+    
+    const response = await axios.post('https://test-firebase-dusky.vercel.app/api/sendMessage', {
       userId,
-      userMessage,
-      context,
+      userMessage: modifiedMessage,
+      context: context, // Modified context
       personalityKey // No encoding here
     });
     console.log('Message sent successfully');
@@ -127,7 +129,7 @@ export const continueThread = async (
   threadId: string
 ): Promise<{ assistantResponse: string; threadId: string }> => {
   try {
-    const response = await axios.post('http://localhost:3000/continueThread', {
+    const response = await axios.post('https://test-firebase-dusky.vercel.app/api/continueThread', {
       userId,
       userMessage,
       context,
@@ -143,10 +145,10 @@ export const continueThread = async (
 };
 
 // Add this new function to the existing requests.ts file
-
-export const fetchPersonalityDescription = async (userId: string, personalityName: string): Promise<string> => {
+// personality name swapped for personality key for the second time
+export const fetchPersonalityDescription = async (userId: string, personalityKey: string): Promise<string> => {
   try {
-    const response = await axios.get(`http://localhost:3000/users/${userId}/personalities/${encodeURIComponent(personalityName)}`);
+    const response = await axios.get(`https://test-firebase-dusky.vercel.app/api/users/${userId}/personalities/${encodeURIComponent(personalityKey)}`);
     console.log('Personality description fetched successfully');
     return response.data.description;
   } catch (error) {
@@ -167,7 +169,7 @@ export const fetchPersonalityDescription = async (userId: string, personalityNam
 export const updatePersonalityDescription = async (userId: string, personalityKey: string, newDescription: string): Promise<void> => {
   try {
     const response = await axios.put(
-      `http://localhost:3000/users/${userId}/personalities/${encodeURIComponent(personalityKey)}`,
+      `https://test-firebase-dusky.vercel.app/api/users/${userId}/personalities/${encodeURIComponent(personalityKey)}`,
       { newDescription }
     );
     console.log('Personality description updated successfully');
@@ -195,7 +197,7 @@ export const createPersonality = async (
   newPersonalityDescription: string
 ): Promise<any> => {
   try {
-    const response = await axios.post(`http://localhost:3000/users/${userId}/personalities`, {
+    const response = await axios.post(`https://test-firebase-dusky.vercel.app/api/users/${userId}/personalities`, {
       newPersonalityName,
       newPersonalityDescription,
     });
@@ -234,9 +236,9 @@ export const createPersonality = async (
   }
 };
 
-export const deletePersonality = async (userId: string, personalityName: string): Promise<void> => {
+export const deletePersonality = async (userId: string, personalityKey: string): Promise<void> => {
   try {
-    const response = await axios.delete(`http://localhost:3000/users/${userId}/personalities/${encodeURIComponent(personalityName)}`);
+    const response = await axios.delete(`https://test-firebase-dusky.vercel.app/api/users/${userId}/personalities/${encodeURIComponent(personalityKey)}`);
     console.log('Personality deleted successfully');
     return response.data;
   } catch (error) {

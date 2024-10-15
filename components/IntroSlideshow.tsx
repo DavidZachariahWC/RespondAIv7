@@ -1,45 +1,21 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { View, StyleSheet, Dimensions, FlatList, Text, StatusBar, Platform, TouchableOpacity, Animated } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { View, StyleSheet, Dimensions, FlatList, Text, StatusBar, Platform, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
 import { LinearGradient } from 'expo-linear-gradient';
-import PageIndicator from './PageIndicator';
 import { colors, typography, spacing, globalStyles, gradientColors } from "../constants/styles";
 
 const { width, height } = Dimensions.get('window');
 const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0;
 
 const SLIDES = [
-  { id: '1', type: 'welcome', title: 'Welcome to RespondAI', description: 'Swipe right to learn more about your new AI assistant' },
-  { id: '2', type: 'regular', title: 'Professional Chat', description: 'Get help with work-related tasks and boost your productivity' },
-  { id: '3', type: 'regular', title: 'Casual Chat', description: 'Chat about anything, anytime, and expand your knowledge' },
-  { id: '4', type: 'regular', title: 'Personalized Experience', description: 'Tailored responses based on your preferences and history' },
-  { id: '5', type: 'regular', title: 'Privacy First', description: 'Your data is secure and your conversations are private' },
-  { id: '6', type: 'signup', title: 'Get Started', description: 'Sign up now to begin your AI-assisted journey!' },
+  { id: '1', type: 'welcome', title: 'Welcome to Respondify', description: 'Your tool for better and easier communications' },
+  { id: '2', type: 'signup', title: 'Get Started', description: 'Sign up now to begin responding better!' },
 ];
 
 const IntroSlideshow: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLastSlide, setIsLastSlide] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  const fadeOut = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const fadeIn = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
 
   const renderWelcomeSlide = ({ item }: { item: typeof SLIDES[0] }) => (
     <View style={styles.welcomeSlide}>
@@ -57,16 +33,6 @@ const IntroSlideshow: React.FC = () => {
     </View>
   );
 
-  const renderRegularSlide = ({ item }: { item: typeof SLIDES[0] }) => (
-    <View style={styles.slide}>
-      <View style={styles.imagePlaceholder} />
-      <View style={styles.textContainer}>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
-        <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">{item.description}</Text>
-      </View>
-    </View>
-  );
-
   const renderSignUpSlide = ({ item }: { item: typeof SLIDES[0] }) => (
     <View style={styles.slide}>
       <View style={styles.signUpContainer}>
@@ -74,7 +40,7 @@ const IntroSlideshow: React.FC = () => {
         <Text style={styles.signUpDescription}>{item.description}</Text>
         <Button
           title="Sign Up"
-          onPress={() => router.push('/SignUp')}  // Changed from '/SignIn' to '/SignUp'
+          onPress={() => router.push('/SignUp')}
           buttonStyle={styles.signUpButton}
           titleStyle={styles.signUpButtonText}
           icon={
@@ -98,23 +64,9 @@ const IntroSlideshow: React.FC = () => {
       case 'signup':
         return renderSignUpSlide({ item });
       default:
-        return renderRegularSlide({ item });
+        return null;
     }
   };
-
-  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      const newIndex = viewableItems[0].index;
-      setCurrentIndex(newIndex);
-      const newIsLastSlide = newIndex === SLIDES.length - 1;
-      setIsLastSlide(newIsLastSlide);
-      if (newIsLastSlide || newIndex === 0) {
-        fadeOut();
-      } else {
-        fadeIn();
-      }
-    }
-  }, []);
 
   const handleSignIn = () => {
     router.push('/SignIn');
@@ -131,12 +83,7 @@ const IntroSlideshow: React.FC = () => {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         />
-        <Animated.View style={{ ...styles.pageIndicatorContainer, opacity: fadeAnim }}>
-          <PageIndicator total={SLIDES.length} current={currentIndex} />
-        </Animated.View>
       </LinearGradient>
       <TouchableOpacity
         style={styles.signInButton}
@@ -187,46 +134,18 @@ const styles = StyleSheet.create({
   swipeIcon: {
     marginTop: spacing.l,
   },
-  imagePlaceholder: {
-    width: width,
-    height: height * 0.85,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  textContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.l,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  title: {
-    ...typography.h2,
-    color: colors.white,
-    marginBottom: spacing.s,
-    textAlign: 'center',
-  },
-  description: {
-    ...typography.body,
-    color: colors.white,
-    textAlign: 'center',
-    fontSize: 14,
-  },
   signInButton: {
     position: 'absolute',
-    top: STATUSBAR_HEIGHT + spacing.m - 50,
+    top: STATUSBAR_HEIGHT + spacing.m - 45,
     right: spacing.l - 20,
     zIndex: 10,
     padding: spacing.s,
+    opacity: 0.4,
   },
   signInButtonText: {
     ...typography.button,
-    color: '#303831',
+    color: colors.white,
     fontSize: 16,
-    opacity: 0.5,
   },
   signUpContainer: {
     flex: 1,
@@ -260,12 +179,6 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginRight: spacing.m,
-  },
-  pageIndicatorContainer: {
-    position: 'absolute',
-    bottom: '17%',
-    left: 0,
-    right: 0,
   },
 });
 

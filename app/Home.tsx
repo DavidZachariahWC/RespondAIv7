@@ -148,7 +148,7 @@ export default function Home() {
               <TextBox
                 value={message}
                 onChangeText={setMessage}
-                placeholder="Type or paste your message here..."
+                placeholder="Type or paste the message here..."
                 wordCount={wordCount()}
               />
 
