@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef } from 'react';
 import { View, StyleSheet, Dimensions, FlatList, Text, StatusBar, Platform, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Icon } from '@rneui/themed';
@@ -10,7 +10,7 @@ const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 44 : StatusBar.currentHeight ||
 
 const SLIDES = [
   { id: '1', type: 'welcome', title: 'Welcome to Respondify', description: 'Your tool for better and easier communications' },
-  { id: '2', type: 'signup', title: 'Get Started', description: 'Sign up now to begin responding better!' },
+  { id: '2', type: 'signup', title: 'Get Started', description: 'Sign up now and start responding better!' },
 ];
 
 const IntroSlideshow: React.FC = () => {
@@ -68,10 +68,6 @@ const IntroSlideshow: React.FC = () => {
     }
   };
 
-  const handleSignIn = () => {
-    router.push('/SignIn');
-  };
-
   return (
     <View style={styles.container}>
       <LinearGradient colors={gradientColors} style={globalStyles.gradientBackground}>
@@ -85,15 +81,6 @@ const IntroSlideshow: React.FC = () => {
           showsHorizontalScrollIndicator={false}
         />
       </LinearGradient>
-      <TouchableOpacity
-        style={styles.signInButton}
-        onPress={handleSignIn}
-        activeOpacity={0.7}
-        accessibilityLabel="Sign In"
-        accessibilityHint="Navigate to sign in page"
-      >
-        <Text style={styles.signInButtonText}>Sign In</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -133,19 +120,6 @@ const styles = StyleSheet.create({
   },
   swipeIcon: {
     marginTop: spacing.l,
-  },
-  signInButton: {
-    position: 'absolute',
-    top: STATUSBAR_HEIGHT + spacing.m - 45,
-    right: spacing.l - 20,
-    zIndex: 10,
-    padding: spacing.s,
-    opacity: 0.4,
-  },
-  signInButtonText: {
-    ...typography.button,
-    color: colors.white,
-    fontSize: 16,
   },
   signUpContainer: {
     flex: 1,

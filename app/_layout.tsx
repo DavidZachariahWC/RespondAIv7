@@ -40,7 +40,7 @@ export default function Layout() {
           <Stack.Screen name="Settings" options={{ animation: 'fade' }} />
           <Stack.Screen name="SignUp" options={{ animation: 'none', headerShown: false }} />
           <Stack.Screen name="generatingResponse" options={{ animation: 'none', headerShown: false }} />
-          <Stack.Screen name="preview" options={{ animation: 'none', headerShown: false }} />
+          <Stack.Screen name="preview" options={{ animation: 'fade', headerShown: false }} />
           <Stack.Screen name="RecentChats" options={{ animation: 'fade', headerShown: false }} />
           <Stack.Screen name="stepOne" options={{ animation: 'slide_from_left', headerShown: false }} />
           <Stack.Screen name="stepTwo" options={{ animation: 'fade', headerShown: false }} />

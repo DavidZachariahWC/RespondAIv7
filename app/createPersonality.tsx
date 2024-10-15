@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing } from '../constants/styles';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import { useAuth } from './AuthContext'; // Import the useAuth hook
 const CreatePersonality: React.FC = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false); // Added loading state
   const router = useRouter();
   const { user, setUserObject } = useAuth(); // Get both user and setUserObject
 
@@ -17,6 +18,8 @@ const CreatePersonality: React.FC = () => {
       Alert.alert('Error', 'User not authenticated.');
       return;
     }
+
+    setLoading(true); // Start loading
 
     try {
       const response = await createPersonality(user.uid, name, description);
@@ -36,6 +39,8 @@ const CreatePersonality: React.FC = () => {
     } catch (error: any) {
       console.error('Error creating personality:', error);
       Alert.alert('Error', error.message || 'Failed to create personality.');
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -68,12 +73,16 @@ const CreatePersonality: React.FC = () => {
       <TouchableOpacity
         style={[
           styles.createButton,
-          (!name || !description) && styles.disabledButton
+          (!name || !description || loading) && styles.disabledButton
         ]}
         onPress={handleCreate}
-        disabled={!name || !description}
+        disabled={!name || !description || loading}
       >
-        <Text style={styles.createButtonText}>Create Personality</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Text style={styles.createButtonText}>Create Personality</Text>
+        )}
       </TouchableOpacity>
     </View>
   );

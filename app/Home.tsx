@@ -27,7 +27,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "./AuthContext";
 import { useUpload } from "./ManageUploadContext"; // Import the context hook
 import TextBox from "../components/TextBox"; // Import the new TextBox component
-import { FadeTransition } from '../components/FadeTransition';
+//import { FadeTransition } from '../components/FadeTransition';
 
 export default function Home() {
   const router = useRouter();
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.l,
     paddingBottom: spacing.m,
-    marginBottom: spacing.m - 20,
+    marginBottom: spacing.m - 12,
     position: 'absolute',
     bottom: 0,
     left: 0,

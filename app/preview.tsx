@@ -169,10 +169,10 @@ export default function Preview() {
                   accessibilityLabel="Regenerate response"
                 >
                   {isRegenerating ? (
-                    <ActivityIndicator size="small" color={colors.white} />
+                    <ActivityIndicator size="small" color={colors.primary} />
                   ) : (
                     <View style={styles.buttonContent}>
-                      <Ionicons name="refresh-outline" size={24} color={colors.white} />
+                      <Ionicons name="refresh-outline" size={24} color={colors.primary} />
                       <Text style={styles.regenerateButtonText}>Regenerate</Text>
                     </View>
                   )}
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   regenerateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.white, // Changed from colors.primary
     borderRadius: 10,
     paddingVertical: spacing.m,
     paddingHorizontal: spacing.l,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   },
   regenerateButtonText: {
     ...typography.button,
-    color: colors.white,
+    color: colors.primary, // Changed from colors.white
     marginLeft: spacing.s,
   },
   buttonContent: {
