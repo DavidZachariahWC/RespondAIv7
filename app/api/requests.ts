@@ -255,3 +255,16 @@ export const deletePersonality = async (userId: string, personalityKey: string):
     throw new Error('An error occurred while deleting the personality');
   }
 };
+
+// Add this new function to the existing requests.ts file
+
+export const deleteUserAccount = async (userId: string): Promise<void> => {
+  try {
+    const response = await axios.delete(`https://test-firebase-dusky.vercel.app/api/users/${userId}`);
+    console.log('User account deleted successfully');
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    throw new Error('An error occurred while deleting the user account');
+  }
+};
