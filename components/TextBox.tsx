@@ -7,15 +7,23 @@ interface TextBoxProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   wordCount: number;
+  placeholderTextColor?: string; // Added prop for placeholder text color
 }
 
-const TextBox: React.FC<TextBoxProps> = ({ value, onChangeText, placeholder, wordCount }) => {
+const TextBox: React.FC<TextBoxProps> = ({
+  value,
+  onChangeText,
+  placeholder,
+  wordCount,
+  placeholderTextColor = colors.textLight, // Default color if none is provided
+}) => {
   return (
     <View style={styles.textBoxContainer}>
       <TextInput
         style={styles.textBox}
         multiline
         placeholder={placeholder}
+        placeholderTextColor={placeholderTextColor} // Applying the placeholder text color
         value={value}
         onChangeText={onChangeText}
       />
@@ -63,4 +71,3 @@ const styles = StyleSheet.create({
 });
 
 export default TextBox;
-

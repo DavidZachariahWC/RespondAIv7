@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing } from '../constants/styles';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import { useAuth } from './AuthContext'; // Import the useAuth hook
 const CreatePersonality: React.FC = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false); // Added loading state
   const router = useRouter();
   const { user, setUserObject } = useAuth(); // Get both user and setUserObject
 
@@ -17,6 +18,8 @@ const CreatePersonality: React.FC = () => {
       Alert.alert('Error', 'User not authenticated.');
       return;
     }
+
+    setLoading(true); // Start loading
 
     try {
       const response = await createPersonality(user.uid, name, description);
@@ -36,17 +39,34 @@ const CreatePersonality: React.FC = () => {
     } catch (error: any) {
       console.error('Error creating personality:', error);
       Alert.alert('Error', error.message || 'Failed to create personality.');
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color={colors.white} />
-      </TouchableOpacity>
+      {/* Header Section */}
+      <View style={styles.header}>
+        {/* Left Placeholder */}
+        <View style={styles.leftPlaceholder}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Title Section */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Create New Personality</Text>
+        </View>
+        
+        {/* Right Placeholder */}
+        <View style={styles.rightPlaceholder}>
+          {/* Optional: Add another button or leave empty */}
+        </View>
+      </View>
       
-      <Text style={styles.title}>Create New Personality</Text>
-      
+      {/* Form Inputs */}
       <TextInput
         style={styles.input}
         placeholder="New Personality Name"
@@ -68,12 +88,16 @@ const CreatePersonality: React.FC = () => {
       <TouchableOpacity
         style={[
           styles.createButton,
-          (!name || !description) && styles.disabledButton
+          (!name || !description || loading) && styles.disabledButton
         ]}
         onPress={handleCreate}
-        disabled={!name || !description}
+        disabled={!name || !description || loading}
       >
-        <Text style={styles.createButtonText}>Create Personality</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Text style={styles.createButtonText}>Create Personality</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -85,18 +109,32 @@ const styles = StyleSheet.create({
     padding: spacing.l,
     backgroundColor: colors.background,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Distribute space evenly
+    marginTop: spacing.l + 15,
+    marginBottom: spacing.l,
+  },
+  leftPlaceholder: {
+    width: 50, // Allocate fixed width to match back button
+    justifyContent: 'center',
+  },
   backButton: {
-    position: 'absolute',
-    top: spacing.l,
-    left: spacing.l,
-    zIndex: 1,
+    padding: spacing.m,
+  },
+  titleContainer: {
+    flex: 1, // Take up remaining space
+    alignItems: 'center',
+    marginLeft: -spacing.m, // Shift title slightly to the left
   },
   title: {
     ...typography.h1,
     color: colors.white,
-    marginTop: spacing.xl,
-    marginBottom: spacing.l,
     textAlign: 'center',
+  },
+  rightPlaceholder: {
+    width: 50, // Same width as leftPlaceholder for symmetry
   },
   input: {
     ...typography.body,

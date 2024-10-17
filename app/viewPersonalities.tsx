@@ -59,7 +59,7 @@ const ViewPersonalities = () => {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.white} />
           </TouchableOpacity>
-          <Text style={styles.title}>Your Personalities</Text>
+          <Text style={styles.title}>     Your Personalities</Text>
         </View>
         <View style={styles.listContainer}>
           <PersonalityList
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: spacing.m,
+    left: 20,
   },
   title: {
     ...typography.h1,

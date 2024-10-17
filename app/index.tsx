@@ -69,7 +69,7 @@ export default function Index() {
   if (!appIsReady || !rootNavigationState?.key) {
     return (
       <CustomSplashScreen
-        logoSource={require('../assets/images/icon.png')}
+        logoSource={require('../assets/images/newIcon.png')}
         appName="RespondAI"
       />
     );

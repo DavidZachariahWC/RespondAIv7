@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.m,
   },
   generateButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.white,
     borderRadius: 10,
     paddingVertical: spacing.m,
     paddingHorizontal: spacing.l,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   },
   generateButtonText: {
     ...typography.button,
-    color: colors.white,
+    color: colors.primary,
     fontWeight: 'bold',
   },
   progressBarContainer: {
