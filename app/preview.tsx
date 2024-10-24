@@ -102,13 +102,7 @@ export default function Preview() {
           >
             {/* Header */}
             <View style={styles.header}>
-              <TouchableOpacity
-                onPress={() => router.back()}
-                style={styles.headerButton}
-                accessibilityLabel="Go back"
-              >
-                <Ionicons name="arrow-back" size={24} color={colors.white} />
-              </TouchableOpacity>
+              
               <Text style={styles.headerTitle}>Response Preview</Text>
               <View style={{ width: 40 }} />
             </View>

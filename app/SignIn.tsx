@@ -73,6 +73,8 @@ export default function SignIn() {
                 onChangeText={setEmail}
                 placeholder="Enter your email"
                 keyboardType="email-address"
+                style={styles.input}
+                placeholderTextColor={colors.lightGrey}
               />
             </View>
 
@@ -83,6 +85,8 @@ export default function SignIn() {
                 onChangeText={setPassword}
                 placeholder="Enter your password"
                 secureTextEntry
+                style={styles.input}
+                placeholderTextColor={colors.lightGrey}
               />
             </View>
 
@@ -189,5 +193,8 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.white,
     textDecorationLine: 'underline',
+  },
+  input: {
+    color: colors.white,
   },
 });

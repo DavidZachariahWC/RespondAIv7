@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { useRouter } from 'expo-router';
 import { fetchUserData } from './api/requests';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Personality {
   personality: string;
@@ -38,10 +39,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const auth = getAuth();
+
+    const checkStoredAuthState = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          const userData = await fetchUserData(parsedUser.uid);
+          setUserObject({
+            name: userData.name,
+            personalities: userData.personalities
+          });
+          router.replace('/Home');
+        }
+      } catch (error) {
+        console.error('Error checking stored auth state:', error);
+      } finally {
+        setInitializing(false);
+      }
+    };
+
+    checkStoredAuthState();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
       if (user) {
         try {
+          await AsyncStorage.setItem('user', JSON.stringify(user));
           const userData = await fetchUserData(user.uid);
           setUserObject({
             name: userData.name,
@@ -50,13 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           router.replace('/Home');
         } catch (error) {
           console.error('Error setting user object:', error);
-          // Handle error (e.g., show an error message to the user)
         }
       } else {
+        await AsyncStorage.removeItem('user');
         setUserObject(null);
         router.replace('/Intro');
       }
-      if (initializing) setInitializing(false);
+      setUser(user);
     });
 
     return unsubscribe;

@@ -1,14 +1,12 @@
 import React from 'react';
-import { TextInput, StyleSheet } from 'react-native';
+import { TextInput, StyleSheet, TextInputProps, StyleProp, TextStyle } from 'react-native';
 import { colors, typography, spacing } from "../constants/styles";
 
-interface AuthInputProps {
+interface AuthInputProps extends TextInputProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder: string;
-  secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  style?: StyleProp<TextStyle>;
 }
 
 const AuthInput: React.FC<AuthInputProps> = ({
@@ -17,11 +15,13 @@ const AuthInput: React.FC<AuthInputProps> = ({
   placeholder,
   secureTextEntry = false,
   keyboardType = 'default',
-  autoCapitalize = 'none'
+  autoCapitalize = 'none',
+  style,
+  ...props
 }) => {
   return (
     <TextInput
-      style={styles.input}
+      style={[styles.input, style]}
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder}
@@ -29,6 +29,7 @@ const AuthInput: React.FC<AuthInputProps> = ({
       secureTextEntry={secureTextEntry}
       keyboardType={keyboardType}
       autoCapitalize={autoCapitalize}
+      {...props}
     />
   );
 };

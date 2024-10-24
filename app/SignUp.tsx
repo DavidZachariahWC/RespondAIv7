@@ -103,6 +103,8 @@ export default function SignUp() {
                 onChangeText={setName}
                 placeholder="Enter your name"
                 autoCapitalize="words"
+                style={styles.input}
+                placeholderTextColor={colors.lightGrey}
               />
             </View>
 
@@ -113,6 +115,8 @@ export default function SignUp() {
                 onChangeText={setEmail}
                 placeholder="Enter your email"
                 keyboardType="email-address"
+                style={styles.input}
+                placeholderTextColor={colors.lightGrey}
               />
             </View>
 
@@ -123,6 +127,8 @@ export default function SignUp() {
                 onChangeText={setPassword}
                 placeholder="Create a password"
                 secureTextEntry
+                style={styles.input}
+                placeholderTextColor={colors.lightGrey}
               />
             </View>
 
@@ -233,5 +239,8 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.white,
     textDecorationLine: 'underline',
+  },
+  input: {
+    color: colors.white,
   },
 });
